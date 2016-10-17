@@ -13,7 +13,7 @@ var mesas = new THREE.Object3D();
 
 var baseColor = 0xFFFFFF;
 var foundColor = 0xFFFFFF;
-var intersectColor = 0xcccc33;
+var intersectColor = 0xffff33;
 
 $( document ).ready(function() {
 	startLogoAnim();
@@ -32,9 +32,6 @@ function initRender() {
 	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 	renderer.setViewport( 0,0,width, height );
 	renderer.getMaxAnisotropy();
-        effect = new THREE.StereoEffect(renderer);
-        effect.setSize(window.innerWidth, window.innerHeight);
-        effect.setEyeSeparation = 0.5;
 
 	var container = document.getElementById('container');
 	container.appendChild(renderer.domElement);
@@ -46,9 +43,9 @@ function initRender() {
 
 	if (window.DeviceOrientationEvent && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
         console.log("Oriented device");
-        //effect = new THREE.StereoEffect(renderer);
-        //effect.setSize(window.innerWidth, window.innerHeight);
-        //effect.setEyeSeparation = 0.5;
+        effect = new THREE.StereoEffect(renderer);
+        effect.setSize(window.innerWidth, window.innerHeight);
+        effect.setEyeSeparation = 0.5;
         controlsdevice = new THREE.DeviceOrientationControls( camera );
         controlsdevice.connect();
         document.onclick = function () {
@@ -86,7 +83,7 @@ function initRender() {
 function buildShape(){
 
 	var geometry = new THREE.CylinderGeometry( 5.5, 5.5, 6.5, 32, 1, true );
-	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/ofi.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 0.5, color: 0xFFFFFF, depthWrite: true  });
+	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/ofi.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
 
 	cylinder = new THREE.Mesh( geometry, material );
 
