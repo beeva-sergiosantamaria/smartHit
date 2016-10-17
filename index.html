@@ -3,8 +3,11 @@
 	<head>
 		<title>VRLabs</title>
 		<meta charset="utf-8">
+		<meta name="viewport" content="user-scalable=no, initial-scale=1">
 		<link rel="stylesheet" type="text/css" href="styles/styles.css">
 		<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans">
+		<link rel="manifest" href="manifest.json">
+		<meta name="mobile-web-app-capable" content="yes">
 	</head>
 	<body class="darkBack">
 	<iframe id="youtubeVideo" width="0" height="0" style="position: absolute; display: none;" src=""></iframe>
@@ -61,13 +64,12 @@
 		<script type="text/javascript" src="libs/MTLLoader.js"></script>
 		<script type="text/javascript" src="libs/OBJLoader.js"></script>
 		<script type="text/javascript" src="libs/ExplodeModifier.js"></script>
-		<script type="text/javascript" src="libs/threex.vertexanimation.js"></script>
-		<script type="text/javascript" src="libs/SPE.js"></script>
+		<script type="text/javascript" src="libs/DeviceOrientationControlsMKIII.js"></script>
+		<script type="text/javascript" src="libs/StereoEffect.js"></script>
 		<script type="text/javascript" src="libs/tween.js"></script>
 		<script type="text/javascript" src="libs/OrbitControls.js"></script>
 		<script type="text/javascript" src="scene/logoAnim.js"></script>
 		<script type="text/javascript" src="scene/main.js"></script>
-		<script src="https://apis.google.com/js/client.js?onload=init"></script>
 		<script type="x-shader/x-vertex" id="vertexshader">
 			uniform float amplitude;
 			attribute vec3 customColor;
