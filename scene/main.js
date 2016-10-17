@@ -60,7 +60,7 @@ function initRender() {
 		controls.enableZoom = true;
     }
 
-    ambientLight = new THREE.AmbientLight(0x888888);
+    ambientLight = new THREE.AmbientLight(0xffffff);
     ambientLight.position.set(0,0.6,0);
     scene.add(ambientLight);
 
@@ -83,7 +83,7 @@ function initRender() {
 function buildShape(){
 
 	var geometry = new THREE.CylinderGeometry( 5.5, 5.5, 6.5, 32, 1, true );
-	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/ofi.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
+	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/ofi.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 0.5, color: 0xFFFFFF, depthWrite: true  });
 
 	cylinder = new THREE.Mesh( geometry, material );
 
@@ -116,7 +116,7 @@ function buildShape(){
 				console.log(elements);
 
 				mesa = elements.children[0];
-				mesa.material = new THREE.MeshLambertMaterial({ transparent: true,  opacity: 1, color: 0xFFFFFF });
+				//mesa.material = new THREE.MeshLambertMaterial({ transparent: true,  opacity: 1, color: 0xFFFFFF });
 				mesa.name = "mesaCentro";
 				mesa.position.x = 2.25;
 				mesa.position.z = -1.5;
