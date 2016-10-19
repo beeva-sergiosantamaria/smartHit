@@ -442,7 +442,8 @@ THREE.MTLLoader.MaterialCreator.prototype = {
 		}
 
 		//this.materials[ materialName ] = new THREE.MeshPhongMaterial( params );
-		this.materials[ materialName ] = new THREE.MeshLambertMaterial( params );
+		//this.materials[ materialName ] = new THREE.MeshLambertMaterial( params );
+		this.materials[ materialName ] = new THREE.MeshBasicMaterial( params );
 		return this.materials[ materialName ];
 
 	},

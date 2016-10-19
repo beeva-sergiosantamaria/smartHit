@@ -1,5 +1,5 @@
 
-var camera, scene, renderer, mesh, mouse, controls, controlsdevice, cylinder, uniforms, numVertices, effect, intersected, mesa,
+var camera, scene, renderer, mesh, mouse, controls, controlsdevice, cylinder, uniforms, numVertices, effect, intersected, centro, design, research, plane, sombras,
 	width = window.innerWidth, 
 	height = window.innerHeight;
 
@@ -13,7 +13,9 @@ var mesas = new THREE.Object3D();
 
 var baseColor = 0xFFFFFF;
 var foundColor = 0xFFFFFF;
-var intersectColor = 0xffff33;
+var intersectCentroColor = 0xffff33;
+var intersectResearchColor = 0x33ff33;
+var intersectDesignColor = 0x3333ff;
 
 $( document ).ready(function() {
 	startLogoAnim();
@@ -25,7 +27,7 @@ function initRender() {
 	scene = new THREE.Scene();
 
 	renderer = new THREE.WebGLRenderer( { antialias: true, preserveDrawingBuffer: true, alpha: true } );
-	//renderer.sortObjects = false;
+	renderer.sortObjects = false;
 	renderer.setSize( width, height );
 	renderer.setClearColor( 0xffffff, 0 );
 	renderer.shadowMap.enabled = true;
@@ -38,8 +40,8 @@ function initRender() {
 
 	camera = new THREE.PerspectiveCamera( 60, (width/height), 0.01, 10000000 );
 	//camera.position.set( 0, 1.4, 0 );
-	camera.viewport = { x: 0, y: 0, width: width, height: height }
-	camera.position.set( 0, 0, 0.1 );
+	//camera.viewport = { x: 0, y: 0, width: width, height: height }
+	camera.position.set( -2, 1.1, -2 );
 
 	if (window.DeviceOrientationEvent && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
         console.log("Oriented device");
@@ -66,8 +68,6 @@ function initRender() {
 
 	buildShape();
 
-	scene.add(mesas);
-
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 
@@ -82,12 +82,13 @@ function initRender() {
 
 function buildShape(){
 
-	var geometry = new THREE.CylinderGeometry( 8, 8, 10, 32, 1, true );
-	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/ofiColor.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
-
+	/*var geometry = new THREE.SphereGeometry( 8, 32, 32 );
+	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/esfera.png'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
 	cylinder = new THREE.Mesh( geometry, material );
+	cylinder.renderOrder = 0;
+	cylinder.rotation.y = 1.7;
 
-	scene.add( cylinder );
+	scene.add( cylinder );*/
 
 	var onProgress = function ( xhr ) {
 			if ( xhr.lengthComputable ) {
@@ -105,28 +106,79 @@ function buildShape(){
 
 	THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
 	var mtlLoader = new THREE.MTLLoader();
-		mtlLoader.setPath( 'models/' );
-		mtlLoader.load( 'mesa.mtl', function( materials ) {
+		mtlLoader.setPath( 'models/vrLabsModel/' );
+		mtlLoader.load( 'planta6.mtl', function( materials ) {
 			materials.preload();
 			var objLoader = new THREE.OBJLoader();
 			objLoader.setMaterials( materials );
-			objLoader.setPath( 'models/' );	
-			objLoader.load( 'mesa.obj', function ( elements ) {
+			objLoader.setPath( 'models/vrLabsModel/' );	
+			objLoader.load( 'planta6.obj', function ( elements ) {
 
-				console.log(elements);
+				scene.add(elements);
 
-				mesa = elements.children[0];
-				mesa.material = new THREE.MeshLambertMaterial({ transparent: true,  opacity: 1, color: 0xFFFFFF });
-				mesa.name = "mesaCentro";
-				mesa.position.x = 2.25;
-				mesa.position.z = -1.5;
-				mesa.position.y = -0.05;
-				mesa.rotation.y = -0.2;
+				/*console.log(elements);
 
-				mesas.add(mesa);
+				centro = elements.children[0];
+				centro.material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('models/vrLabsModel/mesaTexture.jpg'), transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: false  });
+				centro.name = "pared";
+
+				scene.add(centro);*/
+
+				/*centro = elements.children[0];
+				centro.material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('models/vrLabsModel/mesaTexture.jpg'), transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: false  });
+				centro.name = "banco";
+
+				scene.add(centro);*/
+
+				/*centro = elements.children[10];
+				centro.material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('models/vrLabsModel/mesaTexture.jpg'), transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: false  });
+				centro.name = "banco";
+
+				scene.add(centro);*/
+
+				/*research = elements.children[2];
+				research.material = new THREE.MeshLambertMaterial({ transparent: true,  opacity: 1, color: 0xFFFFFF });
+				research.name = "research";
+				research.position.x = 2.25;
+				research.position.z = -1.5;
+				research.position.y = -0.05;
+				research.rotation.y = -0.2;
+
+				mesas.add(research);
+
+				design = elements.children[1];
+				design.material = new THREE.MeshLambertMaterial({ transparent: true,  opacity: 1, color: 0xFFFFFF });
+				design.name = "centro";
+				design.position.x = 2.25;
+				design.position.z = -1.5;
+				design.position.y = -0.05;
+				design.rotation.y = -0.2;
+
+				mesas.add(design);
+
+				sombras = elements.children[0];
+				sombras.material = new THREE.MeshLambertMaterial({ transparent: true, side: THREE.DoubleSide,  opacity: 0.5, color: 0x333333 });
+				sombras.name = "sombras";
+				sombras.position.x = 2.25;
+				sombras.position.z = -1.5;
+				sombras.position.y = -0.05;
+				sombras.rotation.y = -0.2;
+
+				mesas.add(sombras);*/
 
 			}, onProgress, onError );
 		});
+	mesas.renderOrder = 2;	
+	scene.add(mesas);
+
+	/*var planeGetometry = new THREE.PlaneGeometry( 0.8, 2.4, 1 );
+	var planeMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/woman1.png'), transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: false  });
+	plane = new THREE.Mesh( planeGetometry, planeMaterial );
+	plane.position.set( 3.2, -0.8, -4.5 );
+	plane.renderOrder = 1;
+	plane.rotation.x = 3;
+	plane.name = 'toy';
+	scene.add( plane );*/
 
 	/*var geometry = new THREE.CylinderGeometry( 2.5, 1, 2, 64, 1, true );
 	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/centro.png'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: false  });
@@ -166,13 +218,6 @@ function onWindowResize() {
 	if (effect) effect.setSize( window.innerWidth, window.innerHeight );
 }
 
-function movement(value, object, delay, duration){
-    var tween = new TWEEN.Tween(object).to(
-      	 value
-    	,duration).easing(TWEEN.Easing.Quadratic.Out).onUpdate(function () {
-          }).delay(delay).start();
-}
-
 function animate() {
 
 	requestAnimationFrame( animate );
@@ -184,6 +229,7 @@ function animate() {
 	if(controls) controls.update( clock.getDelta() );
 	if(controlsdevice) { controlsdevice.update(); console.log('device control: ', controlsdevice.deviceOrientation.gamma); }
 }
+
 function render(){
 
 	if(effect) effect.render( scene, camera );
@@ -193,16 +239,25 @@ function render(){
     var intersections = raycaster.intersectObjects( mesas.children );
 
     if ( intersections.length > 0 ) {
-    	console.log('ontersections on');
 		if ( intersected != intersections[ 0 ].object ) {
+			console.log(intersections[ 0 ].object.name); 
 			if ( intersected ) intersected.material.color.setHex( baseColor );
 			intersected = intersections[ 0 ].object;
-			intersected.material.color.setHex( intersectColor );
+			if( intersected.name == 'centro' ){
+				intersected.material.color.setHex( intersectCentroColor );
+				movement( { x: 0, y: 0, z: 0 }, plane.rotation, 0, 200);
+			}
+			else if( intersected.name == 'design' ){
+				intersected.material.color.setHex( intersectDesignColor);
+			}
+			else if( intersected.name == 'research' ){
+				intersected.material.color.setHex( intersectResearchColor);
+			}
 		}
 		document.body.style.cursor = 'pointer';
 	}
 	else if ( intersected ) {
-    	console.log('ontersections off');
+		movement( { x: 3, y: 0, z: 0 }, plane.rotation, 0, 200);
 		intersected.material.color.setHex( baseColor );
 		intersected = null;
 		document.body.style.cursor = 'auto';
@@ -218,5 +273,13 @@ function render(){
 			cylinder.geometry.verticesNeedUpdate = true; // important
 		}
 	}*/
+}
+
+function movement(value, object, delay, duration){
+	console.log('entra movement');
+    var tween = new TWEEN.Tween(object).to(
+      	 value
+    	,duration).easing(TWEEN.Easing.Quadratic.Out).onUpdate(function () {
+          }).delay(delay).start();
 }
 
