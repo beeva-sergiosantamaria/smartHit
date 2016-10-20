@@ -1,5 +1,5 @@
 # Blender MTL File: 'planta6.blend'
-# Material Count: 8
+# Material Count: 9
 
 newmtl Material
 Ns 0.000000
@@ -25,12 +25,24 @@ illum 1
 newmtl glassMaterial
 Ns 96.078431
 Ka 0.641026 0.641026 0.641026
-Kd 0.228909 0.294482 0.438544
+Kd 1.000000 0.957640 0.989310
 Ks 1.000000 1.000000 1.000000
 Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 0.658120
 illum 3
+map_Kd cristal.png
+
+newmtl glassMaterial_cristal.png
+Ns 96.078431
+Ka 0.641026 0.641026 0.641026
+Kd 1.000000 0.957640 0.989310
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.658120
+illum 3
+map_Kd cristal.png
 
 newmtl patasMaterial
 Ns 96.078431
