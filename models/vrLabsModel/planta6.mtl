@@ -1,5 +1,5 @@
 # Blender MTL File: 'planta6.blend'
-# Material Count: 5
+# Material Count: 8
 
 newmtl Material
 Ns 0.000000
@@ -31,6 +31,38 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 0.658120
 illum 3
+
+newmtl patasMaterial
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.098504 0.098504 0.098504
+Ks 0.833333 0.833333 0.833333
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl sueloMaterial
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd moqueta.jpg
+
+newmtl sueloMaterial_NONE
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd moqueta.jpg
 
 newmtl techoMaterial
 Ns 96.078431

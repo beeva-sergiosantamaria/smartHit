@@ -28,6 +28,7 @@ function initRender() {
 
 	renderer = new THREE.WebGLRenderer( { antialias: true, preserveDrawingBuffer: true, alpha: true } );
 	renderer.sortObjects = false;
+	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( width, height );
 	renderer.setClearColor( 0xffffff, 0 );
 	renderer.shadowMap.enabled = true;
@@ -82,13 +83,13 @@ function initRender() {
 
 function buildShape(){
 
-	/*var geometry = new THREE.SphereGeometry( 8, 32, 32 );
-	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/esfera.png'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
+	var geometry = new THREE.SphereGeometry( 10, 32, 32 );
+	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/sky2.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
 	cylinder = new THREE.Mesh( geometry, material );
 	cylinder.renderOrder = 0;
 	cylinder.rotation.y = 1.7;
 
-	scene.add( cylinder );*/
+	scene.add( cylinder );
 
 	var onProgress = function ( xhr ) {
 			if ( xhr.lengthComputable ) {
@@ -262,6 +263,8 @@ function render(){
 		intersected = null;
 		document.body.style.cursor = 'auto';
 	}
+
+	cylinder.rotation.y += 0.0001;
 
 	/*if(cylinder != undefined ){
 		for( var a = 0; a < numVertices; a+=3 ){
