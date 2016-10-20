@@ -42,7 +42,7 @@ function initRender() {
 	camera = new THREE.PerspectiveCamera( 60, (width/height), 0.01, 10000000 );
 	//camera.position.set( 0, 1.4, 0 );
 	//camera.viewport = { x: 0, y: 0, width: width, height: height }
-	camera.position.set( -1.5, 1.1, -1.5 );
+	camera.position.set( -0.5, 1.1, -1.7 );
 
 	if (window.DeviceOrientationEvent && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
         console.log("Oriented device");
