@@ -264,7 +264,7 @@ function render(){
 		document.body.style.cursor = 'auto';
 	}
 
-	cylinder.rotation.y += 0.0001;
+	cylinder.rotation.y += 0.0003;
 
 	/*if(cylinder != undefined ){
 		for( var a = 0; a < numVertices; a+=3 ){
