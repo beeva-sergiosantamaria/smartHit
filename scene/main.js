@@ -1,5 +1,6 @@
 
-var camera, scene, renderer, mesh, mouse, controls, controlsdevice, cylinder, uniforms, numVertices, effect, intersected, centro, design, research, plane, sombras,
+var camera, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, numVertices, effect, intersected, centro, design, research, clever, sillas,
+	comunicacion, pared, sky, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, plane, particleCube, radicalText, radicalTextNParticles, researchText, researchTextNParticles,
 	width = window.innerWidth, 
 	height = window.innerHeight;
 
@@ -9,7 +10,12 @@ var raycaster = new THREE.Raycaster();
 
 var manager = new THREE.LoadingManager();
 
-var mesas = new THREE.Object3D();
+var planta = new THREE.Object3D();
+var interactivos = new THREE.Object3D();
+
+var disperseParticles = { nParticles: 2000, path: 'disperse' }
+var particlesActive;
+var min = -3, max = 3;
 
 var baseColor = 0xFFFFFF;
 var foundColor = 0xFFFFFF;
@@ -19,6 +25,21 @@ var intersectDesignColor = 0x3333ff;
 
 $( document ).ready(function() {
 	startLogoAnim();
+});
+
+$(document).on("keydown", function (e) {
+	if (e.keyCode == '38' ) {
+        particlesDisperse( radicalTextNParticles, 'radical');
+    }
+    else if (e.keyCode == '40') {
+    	particlesDisperse( researchTextNParticles, 'research');
+    }
+    else if (e.keyCode == '37') {
+        particlesDisperse( 2000, 'disperse');
+    }
+    else if (e.keyCode == '39') {
+        particlesDisperse( researchTextNParticles, 'research');
+    }
 });
 
 function initRender() {
@@ -45,6 +66,7 @@ function initRender() {
 	camera.position.set( -0.5, 1.1, -1.7 );
 
 	if (window.DeviceOrientationEvent && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+		//console.log('navigator: ', navigator);
         console.log("Oriented device");
         effect = new THREE.StereoEffect(renderer);
         effect.setSize(window.innerWidth, window.innerHeight);
@@ -83,18 +105,61 @@ function initRender() {
 
 function buildShape(){
 
-	var geometry = new THREE.SphereGeometry( 10, 32, 32 );
-	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/sky2.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
-	cylinder = new THREE.Mesh( geometry, material );
-	cylinder.renderOrder = 0;
-	cylinder.rotation.y = 1.7;
+	/*var loader = new THREE.FontLoader();
+	loader.load( 'scene/fonts/droid_sans_bold.typeface.js', function ( font ) {
+		radicalText = new THREE.TextGeometry( 'Radical', {
+			font: font,
+			size: 0.1,
+			height: 0,
+			curveSegments: 1,
+			/*bevelEnabled: true,
+			bevelThickness: 5,
+			bevelSize: 2
+		});
+		researchText = new THREE.TextGeometry( 'Research', {
+			font: font,
+			size: 0.1,
+			height: 0,
+			curveSegments: 1,
+			/*bevelEnabled: true,
+			bevelThickness: 5,
+			bevelSize: 2
+		});
+		var modifier = new THREE.SubdivisionModifier( 1 );
+        	modifier.modify( radicalText );
+        	modifier.modify( researchText );
+        radicalTextNParticles = radicalText.vertices.length;
+        researchTextNParticles = researchText.vertices.length;	
+        console.log('radicalText: ', radicalText);	
+	});
 
-	scene.add( cylinder );
+   	var boxGeometry = new THREE.Geometry();
+   	for (var p = 0; p < 2000; p++) {
+	  var pX = Math.random() * (max - min + 1) + min,
+	      pY = Math.random() * (max - min + 1) + min,
+	      pZ = Math.random() * (max - min + 1) + min,
+	      particle = new THREE.Vector3(pX, pY, pZ);
+	  	  boxGeometry.vertices.push(particle);
+	} 	
+	//var discTexture = THREE.ImageUtils.loadTexture( 'images/disc.png' );
+	var particleMaterial = new THREE.ParticleBasicMaterial({ size: 0.02, color: 0x333333, transparency: true, opacity: 0.5 });
+	particleCube = new THREE.Points( boxGeometry, particleMaterial );
+	particleCube.position.set(0, 0, 0);
+
+	scene.add( particleCube );*/		
+
+	var skyGeometry = new THREE.SphereGeometry( 10, 32, 32 );
+	var skyMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/sky2.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
+	sky = new THREE.Mesh( skyGeometry, skyMaterial );
+	sky.renderOrder = 0;
+	sky.rotation.y = 1.7;
+
+	scene.add( sky );
 
 	var onProgress = function ( xhr ) {
 			if ( xhr.lengthComputable ) {
 				var percentComplete = xhr.loaded / xhr.total * 100;
-				console.log(percentComplete);
+				//console.log(percentComplete);
 				if(percentComplete == 100) {
 					setTimeout( function() {
 					
@@ -115,86 +180,120 @@ function buildShape(){
 			objLoader.setPath( 'models/vrLabsModel/' );	
 			objLoader.load( 'planta6.obj', function ( elements ) {
 
-				scene.add(elements);
+				//scene.add(elements);
 
-				/*console.log(elements);
+				console.log(elements);
 
-				centro = elements.children[0];
-				centro.material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('models/vrLabsModel/mesaTexture.jpg'), transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: false  });
-				centro.name = "pared";
+				techo = elements.children[10];
+				techo.renderOrder = 0;
+				techo.name = "techo";
 
-				scene.add(centro);*/
+				planta.add(techo);
 
-				/*centro = elements.children[0];
-				centro.material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('models/vrLabsModel/mesaTexture.jpg'), transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: false  });
-				centro.name = "banco";
+				banco = elements.children[9];
+				banco.renderOrder = 0;
+				banco.name = "banco";
 
-				scene.add(centro);*/
+				planta.add(banco);
 
-				/*centro = elements.children[10];
-				centro.material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('models/vrLabsModel/mesaTexture.jpg'), transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: false  });
-				centro.name = "banco";
+				cristaleraEntrada = elements.children[8];
+				cristaleraEntrada.renderOrder = 1;
+				cristaleraEntrada.name = "cristaleraEntrada";
 
-				scene.add(centro);*/
+				planta.add(cristaleraEntrada);
 
-				/*research = elements.children[2];
-				research.material = new THREE.MeshLambertMaterial({ transparent: true,  opacity: 1, color: 0xFFFFFF });
+				pared = elements.children[7];
+				pared.renderOrder = 0;
+				pared.name = "pared";
+
+				planta.add(pared);
+
+				cristaleraAgora = elements.children[6];
+				cristaleraAgora.renderOrder = 1;
+				cristaleraAgora.name = "cristaleraAgora";
+
+				planta.add(cristaleraAgora);
+
+				centro = elements.children[5];
+				centro.renderOrder = 0;
+				centro.name = "centro";
+
+				interactivos.add(centro);
+
+				research = elements.children[4];
+				research.renderOrder = 0;
 				research.name = "research";
-				research.position.x = 2.25;
-				research.position.z = -1.5;
-				research.position.y = -0.05;
-				research.rotation.y = -0.2;
 
-				mesas.add(research);
+				interactivos.add(research);
 
-				design = elements.children[1];
-				design.material = new THREE.MeshLambertMaterial({ transparent: true,  opacity: 1, color: 0xFFFFFF });
-				design.name = "centro";
-				design.position.x = 2.25;
-				design.position.z = -1.5;
-				design.position.y = -0.05;
-				design.rotation.y = -0.2;
+				design = elements.children[3];
+				design.renderOrder = 0;
+				design.name = "design";
 
-				mesas.add(design);
+				interactivos.add(design);
 
-				sombras = elements.children[0];
-				sombras.material = new THREE.MeshLambertMaterial({ transparent: true, side: THREE.DoubleSide,  opacity: 0.5, color: 0x333333 });
-				sombras.name = "sombras";
-				sombras.position.x = 2.25;
-				sombras.position.z = -1.5;
-				sombras.position.y = -0.05;
-				sombras.rotation.y = -0.2;
+				comunicacion = elements.children[2];
+				comunicacion.renderOrder = 0;
+				comunicacion.name = "comunicacion";
 
-				mesas.add(sombras);*/
+				interactivos.add(comunicacion);
+
+				clever = elements.children[1];
+				clever.renderOrder = 0;
+				clever.name = "clever";
+
+				interactivos.add(clever);
+
+				cristaleraFrontal = elements.children[0];
+				cristaleraFrontal.renderOrder = 2;
+				cristaleraFrontal.name = "cristaleraFrontal";
+
+				planta.add(cristaleraFrontal);
+
+				/*sillas = elements.children[0];
+				sillas.renderOrder = 0;
+				sillas.name = "sillas";
+
+				planta.add(sillas);*/
+
+				scene.add(planta);
+				scene.add(interactivos);
+
 
 			}, onProgress, onError );
 		});
-	mesas.renderOrder = 2;	
-	scene.add(mesas);
+}
 
-	/*var planeGetometry = new THREE.PlaneGeometry( 0.8, 2.4, 1 );
-	var planeMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/woman1.png'), transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: false  });
-	plane = new THREE.Mesh( planeGetometry, planeMaterial );
-	plane.position.set( 3.2, -0.8, -4.5 );
-	plane.renderOrder = 1;
-	plane.rotation.x = 3;
-	plane.name = 'toy';
-	scene.add( plane );*/
-
-	/*var geometry = new THREE.CylinderGeometry( 2.5, 1, 2, 64, 1, true );
-	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/centro.png'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: false  });
-
-	cylinder = new THREE.Mesh( geometry, material );
-
-	scene.add( cylinder );
-
-	var geometry = new THREE.CylinderGeometry( 2.5, 1, 2, 64, 1, true );
-	var material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/research.png'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: false  });
-
-	cylinder = new THREE.Mesh( geometry, material );
-
-	scene.add( cylinder );*/
+function particlesDisperse( Particles, path){
+	/*if( disperseParticles.path != path){ 
+   		for (var p = 0; p < disperseParticles.nParticles; p++) {
+		  	var pX = Math.random() * (max - min + 1) + min,
+			    pY = Math.random() * (max - min + 1) + min,
+			    pZ = Math.random() * (max - min + 1) + min;
+      		if( disperseParticles.path != 'disperse' ) movement( { x: pX, y: pY, z: pZ }, particleCube.geometry.vertices[p], 0 , 1000 ); 
+	      	if( p == disperseParticles.nParticles - 1 && path != 'disperse' ) setTimeout( function(){ reorderParticles( Particles, path ) }, 100 );  
+			else if( path == 'disperse' ) disperseParticles = { nParticles: 2000, path: 'disperse'};
+	    } 
+	}*/
+}
 	
+function reorderParticles( Particles, path){
+	/*if(path == 'radical'){
+		particleCube.position.set( -2.7, 1, -2.1 );
+		particleCube.lookAt( camera.position );
+		for( var a = 0; a < Particles; a++ ){
+			movement( { x: radicalText.vertices[a].x, y: radicalText.vertices[a].y, z: radicalText.vertices[a].z }, particleCube.geometry.vertices[a], 0.1*a, 1000 );
+			if( a == Particles - 1 ) disperseParticles = { nParticles: Particles, path: 'radical'};
+		}
+	}
+	else if(path == 'research'){
+		particleCube.position.set( -2.7, 1, 1 );
+		particleCube.lookAt( camera.position );
+		for( var a = 0; a < Particles; a++ ){
+			movement( { x: researchText.vertices[a].x, y: researchText.vertices[a].y, z: researchText.vertices[a].z }, particleCube.geometry.vertices[a], 0.1*a , 1000 );
+			if( a == Particles - 1 )disperseParticles = { nParticles: Particles, path: 'research'};
+		}
+	}*/
 }
 
 function explodeGeometry(){
@@ -228,7 +327,7 @@ function animate() {
 	render();
 
 	if(controls) controls.update( clock.getDelta() );
-	if(controlsdevice) { controlsdevice.update(); console.log('device control: ', controlsdevice.deviceOrientation.gamma); }
+	if(controlsdevice) { controlsdevice.update(); /*console.log('device control: ', controlsdevice.deviceOrientation.gamma);*/ }
 }
 
 function render(){
@@ -237,34 +336,41 @@ function render(){
     else renderer.render( scene, camera );
 
     raycaster.setFromCamera( mouse, camera );
-    var intersections = raycaster.intersectObjects( mesas.children );
+    var intersections = raycaster.intersectObjects( interactivos.children );
 
     if ( intersections.length > 0 ) {
 		if ( intersected != intersections[ 0 ].object ) {
-			console.log(intersections[ 0 ].object.name); 
-			if ( intersected ) intersected.material.color.setHex( baseColor );
+			/*if ( intersected ) intersected.material.color.setHex( baseColor );*/
 			intersected = intersections[ 0 ].object;
-			if( intersected.name == 'centro' ){
-				intersected.material.color.setHex( intersectCentroColor );
-				movement( { x: 0, y: 0, z: 0 }, plane.rotation, 0, 200);
+			/*if( intersected.name == 'centro' ){
+				console.log(intersections[ 0 ].object.name); 
+				reorderParticles('radical');
+				//intersected.material.color.setHex( intersectCentroColor );
+				//movement( { x: 0, y: 0, z: 0 }, plane.rotation, 0, 200);
 			}
 			else if( intersected.name == 'design' ){
-				intersected.material.color.setHex( intersectDesignColor);
+				console.log(intersections[ 0 ].object.name); 
+				//intersected.material.color.setHex( intersectDesignColor);
 			}
 			else if( intersected.name == 'research' ){
-				intersected.material.color.setHex( intersectResearchColor);
-			}
+				console.log(intersections[ 0 ].object.name); 
+				reorderParticles('research');
+				//intersected.material.color.setHex( intersectResearchColor);
+			} */
+			document.body.style.cursor = 'pointer';
 		}
-		document.body.style.cursor = 'pointer';
 	}
 	else if ( intersected ) {
-		movement( { x: 3, y: 0, z: 0 }, plane.rotation, 0, 200);
-		intersected.material.color.setHex( baseColor );
+		reorderParticles('none');
+		//movement( { x: 3, y: 0, z: 0 }, plane.rotation, 0, 200);
+		//intersected.material.color.setHex( baseColor );
 		intersected = null;
 		document.body.style.cursor = 'auto';
 	}
 
-	cylinder.rotation.y += 0.0003;
+	sky.rotation.y += 0.0003;
+
+	if( particleCube != undefined ) { particleCube.geometry.verticesNeedUpdate = true; /*particleCube.lookAt( camera.position );*/ }
 
 	/*if(cylinder != undefined ){
 		for( var a = 0; a < numVertices; a+=3 ){
@@ -279,10 +385,23 @@ function render(){
 }
 
 function movement(value, object, delay, duration){
-	console.log('entra movement');
     var tween = new TWEEN.Tween(object).to(
       	 value
-    	,duration).easing(TWEEN.Easing.Quadratic.Out).onUpdate(function () {
+    	,duration).easing(TWEEN.Easing.Back.Out).onUpdate(function () {
           }).delay(delay).start();
 }
+
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition);
+    } else {
+        console.log("Geolocation is not supported by this browser.");
+    }
+}
+function showPosition(position) {
+    console.log("Latitude: " + position.coords.latitude + 
+    "Longitude: " + position.coords.longitude); 
+}
+
+//getLocation();
 

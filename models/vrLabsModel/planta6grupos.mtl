@@ -1,5 +1,5 @@
 # Blender MTL File: 'planta6grupos.blend'
-# Material Count: 13
+# Material Count: 10
 
 newmtl Material
 Ns 0.000000
@@ -11,28 +11,6 @@ Ni 1.000000
 d 1.000000
 illum 1
 map_Kd mesaTexture.jpg
-
-newmtl Material.001
-Ns 0.000000
-Ka 1.000000 1.000000 1.000000
-Kd 1.000000 1.000000 1.000000
-Ks 0.000000 0.000000 0.000000
-Ke 0.000000 0.000000 0.000000
-Ni 1.000000
-d 1.000000
-illum 1
-map_Kd mesaTexture.jpg
-
-newmtl Material_mesaTexture2.jpg
-Ns 0.000000
-Ka 1.000000 1.000000 1.000000
-Kd 1.000000 1.000000 1.000000
-Ks 0.000000 0.000000 0.000000
-Ke 0.000000 0.000000 0.000000
-Ni 1.000000
-d 1.000000
-illum 1
-map_Kd mesaTexture2.jpg
 
 newmtl bancoMaterial
 Ns 96.078431
@@ -88,16 +66,6 @@ Ni 1.000000
 d 1.000000
 illum 2
 
-newmtl patasMaterial.001
-Ns 96.078431
-Ka 1.000000 1.000000 1.000000
-Kd 0.098504 0.098504 0.098504
-Ks 0.833333 0.833333 0.833333
-Ke 0.000000 0.000000 0.000000
-Ni 1.000000
-d 1.000000
-illum 2
-
 newmtl sueloMaterial
 Ns 96.078431
 Ka 1.000000 1.000000 1.000000
@@ -107,9 +75,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd mesaTexture2.jpg
+map_Kd moqueta.jpg
 
-newmtl sueloMaterial_sueloPlacas.jpg
+newmtl sueloMaterial_NONE
 Ns 96.078431
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -118,7 +86,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd sueloPlacas.jpg
+map_Kd moqueta.jpg
 
 newmtl techoMaterial
 Ns 96.078431
