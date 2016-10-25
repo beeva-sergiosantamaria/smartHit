@@ -1,5 +1,5 @@
 # Blender MTL File: 'planta6grupos.blend'
-# Material Count: 13
+# Material Count: 15
 
 newmtl Material
 Ns 0.000000
@@ -44,6 +44,16 @@ Ni 1.000000
 d 1.000000
 illum 1
 map_Kd maderaPino.jpg
+
+newmtl chairMetalMAterial
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.123710 0.123710 0.123710
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
 
 newmtl glassMaterial
 Ns 96.078431
@@ -97,6 +107,17 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
+
+newmtl sillaTela
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd telaSilla.jpg
 
 newmtl sueloMaterial
 Ns 96.078431

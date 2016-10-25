@@ -66,7 +66,7 @@ function initRender() {
 	camera.position.set( -0.5, 1.1, -1.7 );
 
 	if (window.DeviceOrientationEvent && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-		//console.log('navigator: ', navigator);
+		console.log('navigator: ', navigator);
         console.log("Oriented device");
         effect = new THREE.StereoEffect(renderer);
         effect.setSize(window.innerWidth, window.innerHeight);
@@ -105,7 +105,7 @@ function initRender() {
 
 function buildShape(){
 
-	/*var loader = new THREE.FontLoader();
+	var loader = new THREE.FontLoader();
 	loader.load( 'scene/fonts/droid_sans_bold.typeface.js', function ( font ) {
 		radicalText = new THREE.TextGeometry( 'Radical', {
 			font: font,
@@ -114,7 +114,7 @@ function buildShape(){
 			curveSegments: 1,
 			/*bevelEnabled: true,
 			bevelThickness: 5,
-			bevelSize: 2
+			bevelSize: 2*/
 		});
 		researchText = new THREE.TextGeometry( 'Research', {
 			font: font,
@@ -123,7 +123,7 @@ function buildShape(){
 			curveSegments: 1,
 			/*bevelEnabled: true,
 			bevelThickness: 5,
-			bevelSize: 2
+			bevelSize: 2*/
 		});
 		var modifier = new THREE.SubdivisionModifier( 1 );
         	modifier.modify( radicalText );
@@ -146,7 +146,7 @@ function buildShape(){
 	particleCube = new THREE.Points( boxGeometry, particleMaterial );
 	particleCube.position.set(0, 0, 0);
 
-	scene.add( particleCube );*/		
+	scene.add( particleCube );		
 
 	var skyGeometry = new THREE.SphereGeometry( 10, 32, 32 );
 	var skyMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/sky2.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
@@ -161,6 +161,7 @@ function buildShape(){
 				var percentComplete = xhr.loaded / xhr.total * 100;
 				//console.log(percentComplete);
 				if(percentComplete == 100) {
+					console.log('model loaded!!');
 					setTimeout( function() {
 					
 					}, 1000 );
@@ -184,77 +185,77 @@ function buildShape(){
 
 				console.log(elements);
 
-				techo = elements.children[10];
+				techo = elements.children[11];
 				techo.renderOrder = 0;
 				techo.name = "techo";
 
 				planta.add(techo);
 
-				banco = elements.children[9];
+				banco = elements.children[10];
 				banco.renderOrder = 0;
 				banco.name = "banco";
 
 				planta.add(banco);
 
-				cristaleraEntrada = elements.children[8];
+				cristaleraEntrada = elements.children[9];
 				cristaleraEntrada.renderOrder = 1;
 				cristaleraEntrada.name = "cristaleraEntrada";
 
 				planta.add(cristaleraEntrada);
 
-				pared = elements.children[7];
+				pared = elements.children[8];
 				pared.renderOrder = 0;
 				pared.name = "pared";
 
 				planta.add(pared);
 
-				cristaleraAgora = elements.children[6];
+				cristaleraAgora = elements.children[7];
 				cristaleraAgora.renderOrder = 1;
 				cristaleraAgora.name = "cristaleraAgora";
 
 				planta.add(cristaleraAgora);
 
-				centro = elements.children[5];
+				centro = elements.children[6];
 				centro.renderOrder = 0;
 				centro.name = "centro";
 
 				interactivos.add(centro);
 
-				research = elements.children[4];
+				research = elements.children[5];
 				research.renderOrder = 0;
 				research.name = "research";
 
 				interactivos.add(research);
 
-				design = elements.children[3];
+				design = elements.children[4];
 				design.renderOrder = 0;
 				design.name = "design";
 
 				interactivos.add(design);
 
-				comunicacion = elements.children[2];
+				comunicacion = elements.children[3];
 				comunicacion.renderOrder = 0;
 				comunicacion.name = "comunicacion";
 
 				interactivos.add(comunicacion);
 
-				clever = elements.children[1];
+				clever = elements.children[2];
 				clever.renderOrder = 0;
 				clever.name = "clever";
 
 				interactivos.add(clever);
 
-				cristaleraFrontal = elements.children[0];
+				cristaleraFrontal = elements.children[1];
 				cristaleraFrontal.renderOrder = 2;
 				cristaleraFrontal.name = "cristaleraFrontal";
 
 				planta.add(cristaleraFrontal);
 
-				/*sillas = elements.children[0];
+				sillas = elements.children[0];
 				sillas.renderOrder = 0;
 				sillas.name = "sillas";
 
-				planta.add(sillas);*/
+				planta.add(sillas);
 
 				scene.add(planta);
 				scene.add(interactivos);
@@ -265,7 +266,7 @@ function buildShape(){
 }
 
 function particlesDisperse( Particles, path){
-	/*if( disperseParticles.path != path){ 
+	if( disperseParticles.path != path){ 
    		for (var p = 0; p < disperseParticles.nParticles; p++) {
 		  	var pX = Math.random() * (max - min + 1) + min,
 			    pY = Math.random() * (max - min + 1) + min,
@@ -274,11 +275,11 @@ function particlesDisperse( Particles, path){
 	      	if( p == disperseParticles.nParticles - 1 && path != 'disperse' ) setTimeout( function(){ reorderParticles( Particles, path ) }, 100 );  
 			else if( path == 'disperse' ) disperseParticles = { nParticles: 2000, path: 'disperse'};
 	    } 
-	}*/
+	}
 }
 	
 function reorderParticles( Particles, path){
-	/*if(path == 'radical'){
+	if(path == 'radical'){
 		particleCube.position.set( -2.7, 1, -2.1 );
 		particleCube.lookAt( camera.position );
 		for( var a = 0; a < Particles; a++ ){
@@ -293,7 +294,7 @@ function reorderParticles( Particles, path){
 			movement( { x: researchText.vertices[a].x, y: researchText.vertices[a].y, z: researchText.vertices[a].z }, particleCube.geometry.vertices[a], 0.1*a , 1000 );
 			if( a == Particles - 1 )disperseParticles = { nParticles: Particles, path: 'research'};
 		}
-	}*/
+	}
 }
 
 function explodeGeometry(){
@@ -342,9 +343,9 @@ function render(){
 		if ( intersected != intersections[ 0 ].object ) {
 			/*if ( intersected ) intersected.material.color.setHex( baseColor );*/
 			intersected = intersections[ 0 ].object;
-			/*if( intersected.name == 'centro' ){
+			if( intersected.name == 'centro' ){
 				console.log(intersections[ 0 ].object.name); 
-				reorderParticles('radical');
+				particlesDisperse( radicalTextNParticles, 'radical');
 				//intersected.material.color.setHex( intersectCentroColor );
 				//movement( { x: 0, y: 0, z: 0 }, plane.rotation, 0, 200);
 			}
@@ -354,14 +355,14 @@ function render(){
 			}
 			else if( intersected.name == 'research' ){
 				console.log(intersections[ 0 ].object.name); 
-				reorderParticles('research');
+				particlesDisperse( researchTextNParticles, 'research');
 				//intersected.material.color.setHex( intersectResearchColor);
-			} */
+			} 
 			document.body.style.cursor = 'pointer';
 		}
 	}
 	else if ( intersected ) {
-		reorderParticles('none');
+		particlesDisperse( 2000, 'disperse');
 		//movement( { x: 3, y: 0, z: 0 }, plane.rotation, 0, 200);
 		//intersected.material.color.setHex( baseColor );
 		intersected = null;
