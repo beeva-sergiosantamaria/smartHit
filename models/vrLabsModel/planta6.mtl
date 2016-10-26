@@ -1,5 +1,5 @@
 # Blender MTL File: 'planta6grupos.blend'
-# Material Count: 15
+# Material Count: 18
 
 newmtl Material
 Ns 0.000000
@@ -23,7 +23,7 @@ d 1.000000
 illum 1
 map_Kd mesaTexture.jpg
 
-newmtl Material_mesaTexture2.jpg
+newmtl Material_paredes.png
 Ns 0.000000
 Ka 1.000000 1.000000 1.000000
 Kd 1.000000 1.000000 1.000000
@@ -32,7 +32,15 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd mesaTexture2.jpg
+map_Kd paredes.png
+
+newmtl None
+Ns 0
+Ka 0.000000 0.000000 0.000000
+Kd 0.8 0.8 0.8
+Ks 0.8 0.8 0.8
+d 1
+illum 2
 
 newmtl bancoMaterial
 Ns 96.078431
@@ -128,9 +136,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd mesaTexture2.jpg
+map_Kd paredes.png
 
-newmtl sueloMaterial_sueloPlacas.jpg
+newmtl sueloMaterial_sueloPlacas2.jpg
 Ns 96.078431
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -139,7 +147,18 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd sueloPlacas.jpg
+map_Kd sueloPlacas2.jpg
+
+newmtl sueloNegroMaterial
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd sueloNegro.jpg
 
 newmtl techoMaterial
 Ns 96.078431
@@ -162,3 +181,13 @@ Ni 1.000000
 d 1.000000
 illum 1
 map_Kd techo.jpg
+
+newmtl teleMaterial
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.052218 0.052218 0.052218
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2

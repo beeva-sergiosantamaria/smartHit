@@ -1,8 +1,9 @@
 
-var camera, crosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, centro, design, research, clever, sillas,
-	comunicacion, pared, sky, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, plane, particleCube, radicalText, radicalTextNParticles, researchText, researchTextNParticles,
+var camera, crosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, sky, plane, particleCube, radicalText, radicalTextNParticles, researchText, researchTextNParticles,
 	width = window.innerWidth, 
 	height = window.innerHeight;
+
+var centro, design, research, clever, sillas, comunicacion, pared, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, teles, pantalla1, pantalla2, pantalla3, pantalla4;	
 
 var clock = new THREE.Clock();
 var mouse = new THREE.Vector2();
@@ -12,7 +13,9 @@ var manager = new THREE.LoadingManager();
 
 var planta = new THREE.Object3D();
 var interactivos = new THREE.Object3D();
-var letras = new THREE.Object3D();
+var letrasRadical = new THREE.Object3D();
+var letrasResearch = new THREE.Object3D();
+var letrasDesign = new THREE.Object3D();
 
 var numeroParticulas = 2000;
 var disperseParticles = { nParticles: numeroParticulas, path: 'disperse' };
@@ -27,26 +30,38 @@ var intersectResearchColor = 0x33ff33;
 var intersectDesignColor = 0x3333ff;
 
 $( document ).ready(function() {
-	startLogoAnim();
+	//startLogoAnim();
+	$('#container').addClass('displayOn');
+	$('#logoBox').css('display', 'none');
+	$('#fireWorks').css('display', 'none');
+	initRender();
+	animate();
 });
 
 $(document).on("keydown", function (e) {
 	if (e.keyCode == '38' ) {
-        particlesDisperse( radicalTextNParticles, 'radical');
+        if( particleCube != undefined ) particlesDisperse( radicalTextNParticles, 'radical');
+        removeLetters3D();
+        setTimeout( function(){  moveLetters3d(letrasRadical); }, 100 );  
+       
     }
     else if (e.keyCode == '40') {
-    	particlesDisperse( researchTextNParticles, 'research');
+    	if( particleCube != undefined ) particlesDisperse( researchTextNParticles, 'research');
+    	removeLetters3D();
+    	setTimeout( function(){  moveLetters3d(letrasResearch); }, 100 );  
     }
     else if (e.keyCode == '37') {
-        particlesDisperse( 2000, 'disperse');
+        if( particleCube != undefined ) particlesDisperse( 2000, 'disperse');
+        removeLetters3D();
     }
     else if (e.keyCode == '39') {
-        particlesDisperse( researchTextNParticles, 'research');
+        if( particleCube != undefined ) particlesDisperse( researchTextNParticles, 'research');
+        removeLetters3D();
+        setTimeout( function(){  moveLetters3d(letrasDesign); }, 100 );  
     }
 });
 
 function initRender() {
-
 
 	scene = new THREE.Scene();
 
@@ -80,7 +95,7 @@ function initRender() {
         controlsdevice = new THREE.DeviceOrientationControls( camera, true );
         controlsdevice.connect();
 		crosshair = new THREE.Mesh(
-			new THREE.RingGeometry( 0.02, 0.04, 32 ),
+			new THREE.RingGeometry( 0.01, 0.02, 32 ),
 			new THREE.MeshBasicMaterial( {
 				color: 0x444444,
 			} )
@@ -105,6 +120,7 @@ function initRender() {
 
 	buildShape();
 
+	TweenLite.ticker.addEventListener("tick", render);
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 
@@ -119,11 +135,43 @@ function initRender() {
 
 function buildShape(){
 
-	addLetters3D(['r','a', 'd', 'i', 'c', 'a', 'l']);
-	//addParticleSystem();
-	//addSpritesLetters(['r','a1', 'd', 'i', 'c', 'a2', 'l']);
+	/*video = document.createElement( 'video' );
+	video.src = "videos/sintel.ogv";
+	video.load();
+	video.play(); 
+	
+	videoImage = document.createElement( 'canvas' );
+	videoImage.width = 480;
+	videoImage.height = 204;
+
+	videoImageContext = videoImage.getContext( '2d' );
+	// background color if no video present
+	videoImageContext.fillStyle = '#000000';
+	videoImageContext.fillRect( 0, 0, videoImage.width, videoImage.height );
+
+	videoTexture = new THREE.Texture( videoImage );
+	videoTexture.minFilter = THREE.LinearFilter;
+	videoTexture.magFilter = THREE.LinearFilter;
+	
+	var movieMaterial = new THREE.MeshBasicMaterial( { map: videoTexture, overdraw: true, side:THREE.DoubleSide } );
+	// the geometry on which the movie will be displayed;
+	// 		movie image will be scaled to fit these dimensions.
+	var movieGeometry = new THREE.PlaneGeometry( 0.4, 0.2, 4, 4 );
+	var movieScreen = new THREE.Mesh( movieGeometry, movieMaterial );
+	movieScreen.position.set(0,1,0);
+	scene.add(movieScreen);*/
 
 	addModel();
+
+	//addParticleSystem();
+
+	//addSpritesLetters(['r','a1', 'd', 'i', 'c', 'a2', 'l']);
+
+	setTimeout(function(){
+		addLetters3D(['R','a', 'd', 'i', 'c', 'a', 'l'], { x: -2.7, y: 1, z: -1.7 }, letrasRadical);
+		addLetters3D(['R','e', 's', 'e', 'a', 'r', 'c', 'h'], { x: -2.7, y: 1, z: 1 }, letrasResearch);
+		addLetters3D(['D','e', 's', 'i', 'g', 'n' ], { x: -2.7, y: 1, z: 3 }, letrasDesign);
+	}, 1000);
 
 	var skyGeometry = new THREE.SphereGeometry( 10, 32, 32 );
 	var skyMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/sky2.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
@@ -141,7 +189,7 @@ function particlesDisperse( Particles, path ){
 	}
 }
 	
-function reorderParticles( Particles, path){
+function reorderParticles( Particles, path ){
 	if(path == 'radical'){
 		if( !particlesAnimation ) { 
 			particleCube.position.set( -2.7, 1, -2.1 );
@@ -191,7 +239,31 @@ function reorderParticles( Particles, path){
 	}
 }
 
+function moveLetters3d(object){
+	for ( var a = 0; a < object.children.length; a++ ){
+			movement( { y: 0 }, object.children[a].position, 100 * a , 600 );
+			/*var tween = new TWEEN.Tween(letrasRadical.children[a].position)
+				.to({ y: 0.02 }, Math.floor((Math.random() * 2000) + 1000))
+				.easing(TWEEN.Easing.Quadratic.Out);
+			var tweenBack = new TWEEN.Tween(letrasRadical.children[a].position)
+				.to({ y: -0.02 }, Math.floor((Math.random() * 2000) + 1000))
+				.easing(TWEEN.Easing.Quadratic.Out);
+			tween.chain(tweenBack);
+			tweenBack.chain(tween);
+			tween.start();*/
+	}
+}
+
+function removeLetters3D(){
+	for ( var a = 0; a < 12; a++ ){
+			if( letrasRadical.children[a] ) movement( { y: -3 }, letrasRadical.children[a].position, 100 * a , 400 );
+			if( letrasDesign.children[a] ) movement( { y: -3 }, letrasDesign.children[a].position, 100 * a , 400 );
+			if( letrasResearch.children[a] ) movement( { y: -3 }, letrasResearch.children[a].position, 100 * a , 400 );
+	}
+}
+
 function addModel(){
+
 	var onProgress = function ( xhr ) {
 			if ( xhr.lengthComputable ) {
 				var percentComplete = xhr.loaded / xhr.total * 100;
@@ -221,77 +293,111 @@ function addModel(){
 
 				console.log(elements);
 
-				techo = elements.children[11];
+				techo = elements.children[16];
 				techo.renderOrder = 0;
 				techo.name = "techo";
 
 				planta.add(techo);
 
-				banco = elements.children[10];
+				banco = elements.children[15];
 				banco.renderOrder = 0;
 				banco.name = "banco";
 
 				planta.add(banco);
 
-				cristaleraEntrada = elements.children[9];
+				cristaleraEntrada = elements.children[14];
 				cristaleraEntrada.renderOrder = 1;
 				cristaleraEntrada.name = "cristaleraEntrada";
 
 				planta.add(cristaleraEntrada);
 
-				pared = elements.children[8];
+				pared = elements.children[13];
 				pared.renderOrder = 0;
 				pared.name = "pared";
 
 				planta.add(pared);
 
-				cristaleraAgora = elements.children[7];
+				cristaleraAgora = elements.children[12];
 				cristaleraAgora.renderOrder = 1;
 				cristaleraAgora.name = "cristaleraAgora";
 
 				planta.add(cristaleraAgora);
 
-				centro = elements.children[6];
+				centro = elements.children[11];
 				centro.renderOrder = 0;
 				centro.name = "centro";
 
 				interactivos.add(centro);
 
-				research = elements.children[5];
+				research = elements.children[10];
 				research.renderOrder = 0;
 				research.name = "research";
 
 				interactivos.add(research);
 
-				design = elements.children[4];
+				design = elements.children[9];
 				design.renderOrder = 0;
 				design.name = "design";
 
 				interactivos.add(design);
 
-				comunicacion = elements.children[3];
+				comunicacion = elements.children[8];
 				comunicacion.renderOrder = 0;
 				comunicacion.name = "comunicacion";
 
 				interactivos.add(comunicacion);
 
-				clever = elements.children[2];
+				clever = elements.children[7];
 				clever.renderOrder = 0;
 				clever.name = "clever";
 
 				interactivos.add(clever);
 
-				cristaleraFrontal = elements.children[1];
+				cristaleraFrontal = elements.children[6];
 				cristaleraFrontal.renderOrder = 2;
 				cristaleraFrontal.name = "cristaleraFrontal";
 
 				planta.add(cristaleraFrontal);
 
-				sillas = elements.children[0];
+				sillas = elements.children[5];
 				sillas.renderOrder = 0;
 				sillas.name = "sillas";
 
 				planta.add(sillas);
+
+				teles = elements.children[4];
+				teles.renderOrder = 0;
+				teles.name = "teles";
+
+				planta.add(teles);
+
+				pantalla1 = elements.children[3];
+				pantalla1.renderOrder = 0;
+				pantalla1.name = "pantalla1";
+				//pantalla1.material = movieMaterial;
+
+				planta.add(pantalla1);
+
+				pantalla2 = elements.children[2];
+				pantalla2.renderOrder = 0;
+				pantalla2.name = "pantalla2";
+				//pantalla2.material = movieMaterial;
+
+				planta.add(pantalla2);
+
+				pantalla3 = elements.children[1];
+				pantalla3.renderOrder = 0;
+				pantalla3.name = "pantalla3";
+				//pantalla3.material = movieMaterial;
+
+				planta.add(pantalla3);
+
+				pantalla4 = elements.children[0];
+				pantalla4.renderOrder = 0;
+				pantalla4.name = "pantalla4";
+				//pantalla4.material = movieMaterial;
+
+				planta.add(pantalla4);
 
 				scene.add(planta);
 				scene.add(interactivos);
@@ -301,7 +407,7 @@ function addModel(){
 		});
 }
 
-function addLetters3D(lettersArray){
+function addLetters3D(lettersArray, position, object){
 
 	var loader = new THREE.FontLoader();
 	loader.load( 'scene/fonts/droid_sans_bold.typeface.js', function ( font ) {
@@ -312,22 +418,25 @@ function addLetters3D(lettersArray){
 				height: 0.01,
 				curveSegments: 3,
 				bevelEnabled: true,
-				bevelThickness: 0.005,
-				bevelSize: 0.005
+				bevelThickness: 0.01,
+				bevelSize: 0.01
 			});
 	        var materialFront = new THREE.MeshBasicMaterial( { color: 0xffdd44 } );
 			var materialSide = new THREE.MeshBasicMaterial( { color: 0x333333 } );
 			var materialArray = [ materialFront, materialSide ];
 			var textMaterial = new THREE.MeshFaceMaterial(materialArray);
 			var radicalTextMesh = new THREE.Mesh( radicalTextModel, textMaterial );
-			radicalTextMesh.position.x = 0.1*a
+			radicalTextMesh.position.x = 0.1 * a;
+			radicalTextMesh.position.y = -2;
 			radicalTextModel.computeBoundingBox();
-			letras.add(radicalTextMesh);	
+			object.add(radicalTextMesh);	
 		}
 	});
-	letras.position.set( -2.7, 1, -1.7 );
-	letras.lookAt( camera.position );
-	scene.add(letras);
+
+	object.position.set( position.x, position.y, position.z );
+	object.lookAt( camera.position );
+	object.name = 'letras3D';
+	scene.add(object);
 }
 
 function addParticleSystem(){
@@ -338,19 +447,13 @@ function addParticleSystem(){
 			font: font,
 			size: 0.1,
 			height: 0,
-			curveSegments: 1,
-			/*bevelEnabled: true,
-			bevelThickness: 0.005,
-			bevelSize: 0.005*/
+			curveSegments: 1
 		});
 		researchText = new THREE.TextGeometry( 'Research', {
 			font: font,
 			size: 0.1,
 			height: 0,
-			curveSegments: 1,
-			/*bevelEnabled: true,
-			bevelThickness: 5,
-			bevelSize: 2*/
+			curveSegments: 1
 		});
 		var modifier = new THREE.SubdivisionModifier( 1 );
         	modifier.modify( radicalText );
@@ -418,7 +521,10 @@ function animate() {
 	render();
 
 	if(controls) controls.update( clock.getDelta() );
-	if(controlsdevice) { controlsdevice.update(); /*console.log('device control: ', controlsdevice.deviceOrientation.gamma);*/ }
+	if(controlsdevice) { 
+		controlsdevice.update(); 
+		/*console.log('device control: ', controlsdevice.deviceOrientation.gamma);*/ 
+	}
 }
 
 function render(){
@@ -431,29 +537,37 @@ function render(){
 
     if ( intersections.length > 0 ) {
 		if ( intersected != intersections[ 0 ].object ) {
-			/*if ( intersected ) intersected.material.color.setHex( baseColor );*/
 			intersected = intersections[ 0 ].object;
 			if( intersected.name == 'centro' ){
 				console.log(intersections[ 0 ].object.name); 
-				particlesDisperse( radicalTextNParticles, 'radical');
-				//intersected.material.color.setHex( intersectCentroColor );
-				//movement( { x: 0, y: 0, z: 0 }, plane.rotation, 0, 200);
+				if( particleCube != undefined ) particlesDisperse( radicalTextNParticles, 'radical');
+				if( letrasRadical.children.length > 0 ){
+					removeLetters3D();
+	        		setTimeout( function(){  moveLetters3d(letrasRadical); }, 100 );  
+				}
 			}
 			else if( intersected.name == 'design' ){
-				console.log(intersections[ 0 ].object.name); 
-				//intersected.material.color.setHex( intersectDesignColor);
+				if( particleCube != undefined ) console.log(intersections[ 0 ].object.name); 
+				if( letrasDesign.children.length > 0 ){
+					removeLetters3D();
+	        		setTimeout( function(){  moveLetters3d(letrasDesign); }, 100 );  
+				}
 			}
 			else if( intersected.name == 'research' ){
 				console.log(intersections[ 0 ].object.name); 
-				particlesDisperse( researchTextNParticles, 'research');
-				//intersected.material.color.setHex( intersectResearchColor);
+				if( particleCube != undefined ) particlesDisperse( researchTextNParticles, 'research');
+				if( letrasResearch.children.length > 0 ){
+					removeLetters3D();
+	        		setTimeout( function(){  moveLetters3d(letrasResearch); }, 100 );  
+				}
 			} 
 			document.body.style.cursor = 'pointer';
 		}
 	}
 	else if ( intersected ) {
 		console.log(intersected.name); 
-		particlesDisperse( 2000, 'disperse');
+		if( particleCube != undefined ) particlesDisperse( 2000, 'disperse');
+		removeLetters3D();
 		intersected = null;
 		document.body.style.cursor = 'auto';
 	}
@@ -461,6 +575,13 @@ function render(){
 	sky.rotation.y += 0.0003;
 
 	if( particleCube != undefined ) { particleCube.geometry.verticesNeedUpdate = true; /*particleCube.lookAt( camera.position );*/ }
+
+	/*if ( video.readyState === video.HAVE_ENOUGH_DATA ) 
+	{
+		videoImageContext.drawImage( video, 0, 0 );
+		if ( videoTexture ) 
+			videoTexture.needsUpdate = true;
+	}*/
 
 	/*if(cylinder != undefined ){
 		for( var a = 0; a < numVertices; a+=3 ){
@@ -475,10 +596,13 @@ function render(){
 }
 
 function movement(value, object, delay, duration){
-    var tween = new TWEEN.Tween(object).to(
-      	 value
-    	,duration).easing(TWEEN.Easing.Back.Out).onUpdate(function () {
-          }).delay(delay).start();
+    var tween = new TWEEN.Tween(object)
+    .to(value, duration)
+    .easing(TWEEN.Easing.Back.Out)
+    .onUpdate(function () {
+          })
+    .delay(delay)
+    .start();
 }
 
 function getLocation() {
