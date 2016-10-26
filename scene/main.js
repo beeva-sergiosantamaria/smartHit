@@ -1,5 +1,5 @@
 
-var camera, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, numVertices, effect, intersected, centro, design, research, clever, sillas,
+var camera, crosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, centro, design, research, clever, sillas,
 	comunicacion, pared, sky, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, plane, particleCube, radicalText, radicalTextNParticles, researchText, researchTextNParticles,
 	width = window.innerWidth, 
 	height = window.innerHeight;
@@ -12,10 +12,13 @@ var manager = new THREE.LoadingManager();
 
 var planta = new THREE.Object3D();
 var interactivos = new THREE.Object3D();
+var letras = new THREE.Object3D();
 
-var disperseParticles = { nParticles: 2000, path: 'disperse' }
-var particlesActive;
+var numeroParticulas = 2000;
+var disperseParticles = { nParticles: numeroParticulas, path: 'disperse' };
 var min = -3, max = 3;
+var verticesArray = [];
+var particlesAnimation = true;
 
 var baseColor = 0xFFFFFF;
 var foundColor = 0xFFFFFF;
@@ -52,8 +55,8 @@ function initRender() {
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( width, height );
 	renderer.setClearColor( 0xffffff, 0 );
-	renderer.shadowMap.enabled = true;
-	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	//renderer.shadowMap.enabled = true;
+	//renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 	renderer.setViewport( 0,0,width, height );
 	renderer.getMaxAnisotropy();
 
@@ -65,14 +68,25 @@ function initRender() {
 	//camera.viewport = { x: 0, y: 0, width: width, height: height }
 	camera.position.set( -0.5, 1.1, -1.7 );
 
+	scene.add(camera);
+
+
 	if (window.DeviceOrientationEvent && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
 		console.log('navigator: ', navigator);
         console.log("Oriented device");
         effect = new THREE.StereoEffect(renderer);
         effect.setSize(window.innerWidth, window.innerHeight);
         effect.setEyeSeparation = 0.5;
-        controlsdevice = new THREE.DeviceOrientationControls( camera );
+        controlsdevice = new THREE.DeviceOrientationControls( camera, true );
         controlsdevice.connect();
+		crosshair = new THREE.Mesh(
+			new THREE.RingGeometry( 0.02, 0.04, 32 ),
+			new THREE.MeshBasicMaterial( {
+				color: 0x444444,
+			} )
+		);
+		crosshair.position.z = - 2;
+		camera.add( crosshair );
         document.onclick = function () {
             //toggleFullscreen();
         };
@@ -105,48 +119,11 @@ function initRender() {
 
 function buildShape(){
 
-	var loader = new THREE.FontLoader();
-	loader.load( 'scene/fonts/droid_sans_bold.typeface.js', function ( font ) {
-		radicalText = new THREE.TextGeometry( 'Radical', {
-			font: font,
-			size: 0.1,
-			height: 0,
-			curveSegments: 1,
-			/*bevelEnabled: true,
-			bevelThickness: 5,
-			bevelSize: 2*/
-		});
-		researchText = new THREE.TextGeometry( 'Research', {
-			font: font,
-			size: 0.1,
-			height: 0,
-			curveSegments: 1,
-			/*bevelEnabled: true,
-			bevelThickness: 5,
-			bevelSize: 2*/
-		});
-		var modifier = new THREE.SubdivisionModifier( 1 );
-        	modifier.modify( radicalText );
-        	modifier.modify( researchText );
-        radicalTextNParticles = radicalText.vertices.length;
-        researchTextNParticles = researchText.vertices.length;	
-        console.log('radicalText: ', radicalText);	
-	});
+	addLetters3D(['r','a', 'd', 'i', 'c', 'a', 'l']);
+	//addParticleSystem();
+	//addSpritesLetters(['r','a1', 'd', 'i', 'c', 'a2', 'l']);
 
-   	var boxGeometry = new THREE.Geometry();
-   	for (var p = 0; p < 2000; p++) {
-	  var pX = Math.random() * (max - min + 1) + min,
-	      pY = Math.random() * (max - min + 1) + min,
-	      pZ = Math.random() * (max - min + 1) + min,
-	      particle = new THREE.Vector3(pX, pY, pZ);
-	  	  boxGeometry.vertices.push(particle);
-	} 	
-	//var discTexture = THREE.ImageUtils.loadTexture( 'images/disc.png' );
-	var particleMaterial = new THREE.ParticleBasicMaterial({ size: 0.02, color: 0x333333, transparency: true, opacity: 0.5 });
-	particleCube = new THREE.Points( boxGeometry, particleMaterial );
-	particleCube.position.set(0, 0, 0);
-
-	scene.add( particleCube );		
+	addModel();
 
 	var skyGeometry = new THREE.SphereGeometry( 10, 32, 32 );
 	var skyMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/sky2.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
@@ -155,7 +132,66 @@ function buildShape(){
 	sky.rotation.y = 1.7;
 
 	scene.add( sky );
+}
 
+function particlesDisperse( Particles, path ){
+	if( disperseParticles.path != path && particleCube != undefined ){ 
+  		if( path != 'disperse') reorderParticles( disperseParticles.nParticles, 'disperse' );
+      	setTimeout( function(){ reorderParticles( Particles, path ) }, 100 );  
+	}
+}
+	
+function reorderParticles( Particles, path){
+	if(path == 'radical'){
+		if( !particlesAnimation ) { 
+			particleCube.position.set( -2.7, 1, -2.1 );
+			particleCube.lookAt( camera.position );
+			particleCube.geometry.vertices = radicalText.vertices; 
+			disperseParticles = { nParticles: Particles, path: 'radical'}; 
+		}
+		else if( particlesAnimation ){
+			movement( { x: -2.7, y: 1, z: -2.1 }, particleCube.position, 0 , 500 );
+			setTimeout( function(){ particleCube.lookAt( camera.position ); }, 100 );  
+			for( var a = 0; a < Particles; a++ ){
+				movement( { x: radicalText.vertices[a].x, y: radicalText.vertices[a].y, z: radicalText.vertices[a].z }, particleCube.geometry.vertices[a], 0.1*a, 1000 );
+				if( a == Particles - 1 ) disperseParticles = { nParticles: Particles, path: 'radical'};
+			}
+		}
+	}
+	else if(path == 'research'){
+		if( !particlesAnimation ) { 
+			particleCube.position.set( -2.7, 1, 1 );
+			particleCube.lookAt( camera.position );
+			particleCube.geometry.vertices = researchText.vertices; 
+			disperseParticles = { nParticles: Particles, path: 'research'}; 
+		}
+		else if(particlesAnimation){
+			movement( { x: -2.7, y: 1, z: 1 }, particleCube.position, 0 , 500 );
+			setTimeout( function(){ particleCube.lookAt( camera.position ); }, 100 );  
+			for( var a = 0; a < Particles; a++ ){
+				movement( { x: researchText.vertices[a].x, y: researchText.vertices[a].y, z: researchText.vertices[a].z }, particleCube.geometry.vertices[a], 0.1*a , 1000 );
+				if( a == Particles - 1 ) disperseParticles = { nParticles: Particles, path: 'research'};
+			}
+		}
+	}
+	else if(path == 'disperse'){
+		if( !particlesAnimation ) { 
+			particleCube.position.set( 0, 0, 0 );
+			particleCube.geometry.vertices = verticesArray; 
+			disperseParticles = { nParticles: numeroParticulas, path: 'disperse'}; 
+		}
+		else if( particlesAnimation ){
+			movement( { x: 0, y: 0, z: 0 }, particleCube.position, 0 , 500 );
+			setTimeout( function(){ particleCube.lookAt( camera.position ); }, 100 );  
+			for( var a = 0; a < Particles; a++ ){
+				movement( { x: verticesArray[a].x, y: verticesArray[a].y, z: verticesArray[a].z }, particleCube.geometry.vertices[a], 0.1*a , 1000 );
+				if( a == Particles - 1 ) disperseParticles = { nParticles: numeroParticulas, path: 'disperse'};
+			}
+		}
+	}
+}
+
+function addModel(){
 	var onProgress = function ( xhr ) {
 			if ( xhr.lengthComputable ) {
 				var percentComplete = xhr.loaded / xhr.total * 100;
@@ -265,40 +301,94 @@ function buildShape(){
 		});
 }
 
-function particlesDisperse( Particles, path){
-	if( disperseParticles.path != path){ 
-   		for (var p = 0; p < disperseParticles.nParticles; p++) {
-		  	var pX = Math.random() * (max - min + 1) + min,
-			    pY = Math.random() * (max - min + 1) + min,
-			    pZ = Math.random() * (max - min + 1) + min;
-      		if( disperseParticles.path != 'disperse' ) movement( { x: pX, y: pY, z: pZ }, particleCube.geometry.vertices[p], 0 , 1000 ); 
-	      	if( p == disperseParticles.nParticles - 1 && path != 'disperse' ) setTimeout( function(){ reorderParticles( Particles, path ) }, 100 );  
-			else if( path == 'disperse' ) disperseParticles = { nParticles: 2000, path: 'disperse'};
-	    } 
-	}
+function addLetters3D(lettersArray){
+
+	var loader = new THREE.FontLoader();
+	loader.load( 'scene/fonts/droid_sans_bold.typeface.js', function ( font ) {
+		for( var a= 0; a < lettersArray.length; a++ ){
+			var radicalTextModel = new THREE.TextGeometry( lettersArray[a], {
+				font: font,
+				size: 0.1,
+				height: 0.01,
+				curveSegments: 3,
+				bevelEnabled: true,
+				bevelThickness: 0.005,
+				bevelSize: 0.005
+			});
+	        var materialFront = new THREE.MeshBasicMaterial( { color: 0xffdd44 } );
+			var materialSide = new THREE.MeshBasicMaterial( { color: 0x333333 } );
+			var materialArray = [ materialFront, materialSide ];
+			var textMaterial = new THREE.MeshFaceMaterial(materialArray);
+			var radicalTextMesh = new THREE.Mesh( radicalTextModel, textMaterial );
+			radicalTextMesh.position.x = 0.1*a
+			radicalTextModel.computeBoundingBox();
+			letras.add(radicalTextMesh);	
+		}
+	});
+	letras.position.set( -2.7, 1, -1.7 );
+	letras.lookAt( camera.position );
+	scene.add(letras);
 }
-	
-function reorderParticles( Particles, path){
-	if(path == 'radical'){
-		particleCube.position.set( -2.7, 1, -2.1 );
-		particleCube.lookAt( camera.position );
-		for( var a = 0; a < Particles; a++ ){
-			movement( { x: radicalText.vertices[a].x, y: radicalText.vertices[a].y, z: radicalText.vertices[a].z }, particleCube.geometry.vertices[a], 0.1*a, 1000 );
-			if( a == Particles - 1 ) disperseParticles = { nParticles: Particles, path: 'radical'};
-		}
-	}
-	else if(path == 'research'){
-		particleCube.position.set( -2.7, 1, 1 );
-		particleCube.lookAt( camera.position );
-		for( var a = 0; a < Particles; a++ ){
-			movement( { x: researchText.vertices[a].x, y: researchText.vertices[a].y, z: researchText.vertices[a].z }, particleCube.geometry.vertices[a], 0.1*a , 1000 );
-			if( a == Particles - 1 )disperseParticles = { nParticles: Particles, path: 'research'};
-		}
+
+function addParticleSystem(){
+
+	var loader = new THREE.FontLoader();
+	loader.load( 'scene/fonts/droid_sans_bold.typeface.js', function ( font ) {
+		radicalText = new THREE.TextGeometry( 'Radical', {
+			font: font,
+			size: 0.1,
+			height: 0,
+			curveSegments: 1,
+			/*bevelEnabled: true,
+			bevelThickness: 0.005,
+			bevelSize: 0.005*/
+		});
+		researchText = new THREE.TextGeometry( 'Research', {
+			font: font,
+			size: 0.1,
+			height: 0,
+			curveSegments: 1,
+			/*bevelEnabled: true,
+			bevelThickness: 5,
+			bevelSize: 2*/
+		});
+		var modifier = new THREE.SubdivisionModifier( 1 );
+        	modifier.modify( radicalText );
+        	modifier.modify( researchText );
+        radicalTextNParticles = radicalText.vertices.length;
+        researchTextNParticles = researchText.vertices.length;
+	});
+
+   	var boxGeometry = new THREE.Geometry();
+   	for (var p = 0; p < numeroParticulas; p++) {
+	  var pX = Math.random() * (max - min + 1) + min,
+	      pY = Math.random() * (max - min + 1) + min,
+	      pZ = Math.random() * (max - min + 1) + min,
+	      particle = new THREE.Vector3(pX, pY, pZ);
+	      verticesArray.push({ x: pX, y: pY, z: pZ });
+	  	  boxGeometry.vertices.push(particle);
+	} 
+	//var discTexture = THREE.ImageUtils.loadTexture( 'images/disc.png' );
+	var particleMaterial = new THREE.ParticleBasicMaterial({ size: 0.02, color: 0x333333, transparency: true, opacity: 0.5 });
+	particleCube = new THREE.Points( boxGeometry, particleMaterial );
+	particleCube.position.set(0, 0, 0);
+	scene.add( particleCube );
+}
+
+function addSpritesLetters(lettersArray){
+
+	for( var a= 0; a< lettersArray.length; a++ ){
+		var map = new THREE.TextureLoader().load( "images/letters/"+ lettersArray[a] +".png" );
+	    var material = new THREE.SpriteMaterial( { map: map, color: 0xffffff, fog: true } );
+	    var sprite = new THREE.Sprite( material );
+	    sprite.position.x = 0.08 * a;
+	    sprite.position.z = -3;
+	    sprite.scale.set( 0.1, 0.1, 0.1 );
+	    camera.add( sprite );
 	}
 }
 
 function explodeGeometry(){
-	console.log('explode geometry');
 	for( var a = 0; a < numVertices; a+=3 ){
 		var number =  Math.random() * (1 - 4) + 1;
 		//cylinder.geometry.vertices[ a ].multiplyScalar( 0.3 );
@@ -362,9 +452,8 @@ function render(){
 		}
 	}
 	else if ( intersected ) {
+		console.log(intersected.name); 
 		particlesDisperse( 2000, 'disperse');
-		//movement( { x: 3, y: 0, z: 0 }, plane.rotation, 0, 200);
-		//intersected.material.color.setHex( baseColor );
 		intersected = null;
 		document.body.style.cursor = 'auto';
 	}
