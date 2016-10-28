@@ -16,11 +16,17 @@ var raycasterPantallas = new THREE.Raycaster();
 var manager = new THREE.LoadingManager();
 
 var planta = new THREE.Object3D();
+	planta.name = "estructura";
 var interactivos = new THREE.Object3D();
+	interactivos.name = "mesasInteractivas";
 var screensGroup = new THREE.Object3D();
+	screensGroup.name = "screens";
 var letrasRadical = new THREE.Object3D();
+	letrasRadical.name = 'lerasRadical';
 var letrasResearch = new THREE.Object3D();
+	letrasRadical.name = 'letrasResearch';
 var letrasDesign = new THREE.Object3D();
+	letrasRadical.name = 'letrasDesign';
 
 var numeroParticulas = 2000;
 var disperseParticles = { nParticles: numeroParticulas, path: 'disperse' };
@@ -157,6 +163,7 @@ function buildShape(){
 	sky = new THREE.Mesh( skyGeometry, skyMaterial );
 	sky.renderOrder = 0;
 	sky.rotation.y = 1.7;
+	sky.name = "sky";
 
 	scene.add( sky );
 }
@@ -352,9 +359,6 @@ function addModel(){
 
 				planta.add(teles);
 
-				planta.name = "estructura";
-				interactivos.name = "mesasInteractivos"
-
 				scene.add(planta);
 				scene.add(interactivos);
 
@@ -467,19 +471,17 @@ function addScreens(){
 	var geometry = new THREE.PlaneGeometry( 0.4, 0.25, 1, 1 );
 	var material = new THREE.MeshBasicMaterial({ map	: videoTexture.texture, overdraw: true, side:THREE.DoubleSide });
 	var mesh	= new THREE.Mesh( geometry, material );
-	mesh.position.set( -0.23 , 1.13 , 0.74 );
+	mesh.position.set( -0.225 , 1.13 , 0.74 );
 	mesh.rotateY( Math.PI/2 );
 	mesh.name = 'screen1';
 
 	var mesh2 = new THREE.Mesh( geometry, material );
-	mesh2.position.set( -0.23 , 1.13 , 4.15 );
+	mesh2.position.set( -0.225 , 1.13 , 4.15 );
 	mesh2.rotateY( Math.PI/2 );
 	mesh2.name = 'screen2';
 
 	screensGroup.add( mesh );
 	screensGroup.add( mesh2 );
-
-	screensGroup.name = "screens";
 
 	scene.add(screensGroup);
 }
