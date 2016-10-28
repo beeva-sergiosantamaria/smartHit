@@ -1,5 +1,6 @@
 
-var camera, crosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, sky, plane, particleCube, radicalText, radicalTextNParticles, researchText, researchTextNParticles,
+var camera, crosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, sky, plane, particleCube, radicalText,
+ radicalTextNParticles, researchText, researchTextNParticles, interval, videoMP4, videoOgg, video, videoTexture,
 	width = window.innerWidth, 
 	height = window.innerHeight;
 
@@ -7,7 +8,8 @@ var centro, design, research, clever, sillas, comunicacion, pared, cristaleraFro
 
 var clock = new THREE.Clock();
 var mouse = new THREE.Vector2();
-var raycaster = new THREE.Raycaster();
+var raycasterMesas = new THREE.Raycaster();
+var raycasterPantallas = new THREE.Raycaster();
 
 var manager = new THREE.LoadingManager();
 
@@ -76,7 +78,7 @@ function initRender() {
 	renderer.getMaxAnisotropy();
 
 	var container = document.getElementById('container');
-	container.appendChild(renderer.domElement);
+	container.appendChild( renderer.domElement );
 
 	camera = new THREE.PerspectiveCamera( 60, (width/height), 0.01, 10000000 );
 	//camera.position.set( 0, 1.4, 0 );
@@ -102,9 +104,6 @@ function initRender() {
 		);
 		crosshair.position.z = - 2;
 		camera.add( crosshair );
-        document.onclick = function () {
-            //toggleFullscreen();
-        };
     }
 
     else {
@@ -118,11 +117,38 @@ function initRender() {
     ambientLight.position.set(0,0.6,0);
     scene.add(ambientLight);
 
+
+	videoMP4 = document.createElement('video').canPlayType('video/mp4') !== '' ? true : false;
+	videoOgg = document.createElement('video').canPlayType('video/ogg') !== '' ? true : false;
+
+	if( videoMP4 ){
+		var url	= 'videos/sintel.mp4';
+		console.log('play mp4');
+	}
+	else if( videoOgg ){
+		var url	= 'videos/sintel.ogv';
+		console.log('play ogg');
+	}
+	else alert('cant play mp4 or ogv')
+
+	videoTexture= new THREEx.VideoTexture(url);
+	video = videoTexture.video;
+
+	var geometry = new THREE.PlaneGeometry( 0.4, 0.25, 1, 1 );
+	var material = new THREE.MeshBasicMaterial({ map	: videoTexture.texture, overdraw: true, side:THREE.DoubleSide });
+	var mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.set( -0.25 , 1.15 , 0.74 );
+	mesh.rotation.x = Math.PI/10;
+	mesh.rotation.y -= Math.PI/2;
+	mesh.rotation.z = Math.PI/10;
+	scene.add( mesh );
+
 	buildShape();
 
 	TweenLite.ticker.addEventListener("tick", render);
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+	document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 
 	function onDocumentMouseMove( event ) {
 
@@ -135,42 +161,16 @@ function initRender() {
 
 function buildShape(){
 
-	/*video = document.createElement( 'video' );
-	video.src = "videos/sintel.ogv";
-	video.load();
-	video.play(); 
-	
-	videoImage = document.createElement( 'canvas' );
-	videoImage.width = 480;
-	videoImage.height = 204;
-
-	videoImageContext = videoImage.getContext( '2d' );
-	// background color if no video present
-	videoImageContext.fillStyle = '#000000';
-	videoImageContext.fillRect( 0, 0, videoImage.width, videoImage.height );
-
-	videoTexture = new THREE.Texture( videoImage );
-	videoTexture.minFilter = THREE.LinearFilter;
-	videoTexture.magFilter = THREE.LinearFilter;
-	
-	var movieMaterial = new THREE.MeshBasicMaterial( { map: videoTexture, overdraw: true, side:THREE.DoubleSide } );
-	// the geometry on which the movie will be displayed;
-	// 		movie image will be scaled to fit these dimensions.
-	var movieGeometry = new THREE.PlaneGeometry( 0.4, 0.2, 4, 4 );
-	var movieScreen = new THREE.Mesh( movieGeometry, movieMaterial );
-	movieScreen.position.set(0,1,0);
-	scene.add(movieScreen);*/
-
 	addModel();
-
-	//addParticleSystem();
-
-	//addSpritesLetters(['r','a1', 'd', 'i', 'c', 'a2', 'l']);
 
 	setTimeout(function(){
 		addLetters3D(['R','a', 'd', 'i', 'c', 'a', 'l'], { x: -2.7, y: 1, z: -1.7 }, letrasRadical);
 		addLetters3D(['R','e', 's', 'e', 'a', 'r', 'c', 'h'], { x: -2.7, y: 1, z: 1 }, letrasResearch);
 		addLetters3D(['D','e', 's', 'i', 'g', 'n' ], { x: -2.7, y: 1, z: 3 }, letrasDesign);
+
+		//addParticleSystem();
+
+		//addSpritesLetters(['r','a1', 'd', 'i', 'c', 'a2', 'l']);
 	}, 1000);
 
 	var skyGeometry = new THREE.SphereGeometry( 10, 32, 32 );
@@ -242,6 +242,7 @@ function reorderParticles( Particles, path ){
 function moveLetters3d(object){
 	for ( var a = 0; a < object.children.length; a++ ){
 			movement( { y: 0 }, object.children[a].position, 100 * a , 600 );
+			//interval = setInterval(function(){ movement( { y: Math.PI * 2 }, object.children[a].rotation, 500 * a , 600 ); }, 100);
 			/*var tween = new TWEEN.Tween(letrasRadical.children[a].position)
 				.to({ y: 0.02 }, Math.floor((Math.random() * 2000) + 1000))
 				.easing(TWEEN.Easing.Quadratic.Out);
@@ -260,6 +261,7 @@ function removeLetters3D(){
 			if( letrasDesign.children[a] ) movement( { y: -3 }, letrasDesign.children[a].position, 100 * a , 400 );
 			if( letrasResearch.children[a] ) movement( { y: -3 }, letrasResearch.children[a].position, 100 * a , 400 );
 	}
+	clearInterval(interval);
 }
 
 function addModel(){
@@ -374,9 +376,8 @@ function addModel(){
 				pantalla1 = elements.children[3];
 				pantalla1.renderOrder = 0;
 				pantalla1.name = "pantalla1";
-				//pantalla1.material = movieMaterial;
 
-				planta.add(pantalla1);
+				//planta.add(pantalla1);
 
 				pantalla2 = elements.children[2];
 				pantalla2.renderOrder = 0;
@@ -505,6 +506,23 @@ function explodeGeometry(){
 	}
 }
 
+function onDocumentMouseDown( e ) {
+  e.preventDefault();
+  var raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera( mouse, camera );
+  var intersects = raycaster.intersectObjects( planta.children );
+   if ( intersects.length > 0 ) {
+		if ( intersected != intersects[ 0 ].object ) {
+			intersected = intersects[ 0 ].object;
+			console.log('inters ', intersected);
+			video.play();
+		}
+	}
+	else if ( intersected ) {
+		intersected = null;
+	}
+}
+
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
@@ -529,11 +547,11 @@ function animate() {
 
 function render(){
 
-	if(effect) effect.render( scene, camera );
-    else renderer.render( scene, camera );
+	if(effect) { effect.render( scene, camera ); }
+    else { renderer.render( scene, camera ); }
 
-    raycaster.setFromCamera( mouse, camera );
-    var intersections = raycaster.intersectObjects( interactivos.children );
+    raycasterMesas.setFromCamera( mouse, camera );
+    var intersections = raycasterMesas.intersectObjects( interactivos.children );
 
     if ( intersections.length > 0 ) {
 		if ( intersected != intersections[ 0 ].object ) {
@@ -567,6 +585,7 @@ function render(){
 	else if ( intersected ) {
 		console.log(intersected.name); 
 		if( particleCube != undefined ) particlesDisperse( 2000, 'disperse');
+		video.play();
 		removeLetters3D();
 		intersected = null;
 		document.body.style.cursor = 'auto';
@@ -576,12 +595,14 @@ function render(){
 
 	if( particleCube != undefined ) { particleCube.geometry.verticesNeedUpdate = true; /*particleCube.lookAt( camera.position );*/ }
 
-	/*if ( video.readyState === video.HAVE_ENOUGH_DATA ) 
+	/*if ( video != undefined && video.readyState === video.HAVE_ENOUGH_DATA ) 
 	{
 		videoImageContext.drawImage( video, 0, 0 );
 		if ( videoTexture ) 
 			videoTexture.needsUpdate = true;
 	}*/
+
+	if( videoTexture != undefined ) videoTexture.update();
 
 	/*if(cylinder != undefined ){
 		for( var a = 0; a < numVertices; a+=3 ){
