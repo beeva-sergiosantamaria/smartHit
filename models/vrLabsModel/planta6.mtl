@@ -1,5 +1,5 @@
 # Blender MTL File: 'planta6grupos.blend'
-# Material Count: 18
+# Material Count: 17
 
 newmtl Material
 Ns 0.000000
@@ -33,14 +33,6 @@ Ni 1.000000
 d 1.000000
 illum 1
 map_Kd paredes.png
-
-newmtl None
-Ns 0
-Ka 0.000000 0.000000 0.000000
-Kd 0.8 0.8 0.8
-Ks 0.8 0.8 0.8
-d 1
-illum 2
 
 newmtl bancoMaterial
 Ns 96.078431

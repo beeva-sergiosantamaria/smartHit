@@ -1,8 +1,10 @@
 
 var camera, crosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, sky, plane, particleCube, radicalText,
- radicalTextNParticles, researchText, researchTextNParticles, interval, videoMP4, videoOgg, video, videoTexture,
+ radicalTextNParticles, researchText, researchTextNParticles, interval,
 	width = window.innerWidth, 
 	height = window.innerHeight;
+
+var  videoMP4, videoOgg, video, videoTexture;	
 
 var centro, design, research, clever, sillas, comunicacion, pared, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, teles, pantalla1, pantalla2, pantalla3, pantalla4;	
 
@@ -15,6 +17,7 @@ var manager = new THREE.LoadingManager();
 
 var planta = new THREE.Object3D();
 var interactivos = new THREE.Object3D();
+var screensGroup = new THREE.Object3D();
 var letrasRadical = new THREE.Object3D();
 var letrasResearch = new THREE.Object3D();
 var letrasDesign = new THREE.Object3D();
@@ -117,32 +120,6 @@ function initRender() {
     ambientLight.position.set(0,0.6,0);
     scene.add(ambientLight);
 
-
-	videoMP4 = document.createElement('video').canPlayType('video/mp4') !== '' ? true : false;
-	videoOgg = document.createElement('video').canPlayType('video/ogg') !== '' ? true : false;
-
-	if( videoMP4 ){
-		var url	= 'videos/sintel.mp4';
-		console.log('play mp4');
-	}
-	else if( videoOgg ){
-		var url	= 'videos/sintel.ogv';
-		console.log('play ogg');
-	}
-	else alert('cant play mp4 or ogv')
-
-	videoTexture= new THREEx.VideoTexture(url);
-	video = videoTexture.video;
-
-	var geometry = new THREE.PlaneGeometry( 0.4, 0.25, 1, 1 );
-	var material = new THREE.MeshBasicMaterial({ map	: videoTexture.texture, overdraw: true, side:THREE.DoubleSide });
-	var mesh	= new THREE.Mesh( geometry, material );
-	mesh.position.set( -0.25 , 1.15 , 0.74 );
-	mesh.rotation.x = Math.PI/10;
-	mesh.rotation.y -= Math.PI/2;
-	mesh.rotation.z = Math.PI/10;
-	scene.add( mesh );
-
 	buildShape();
 
 	TweenLite.ticker.addEventListener("tick", render);
@@ -162,6 +139,8 @@ function initRender() {
 function buildShape(){
 
 	addModel();
+
+	addScreens();
 
 	setTimeout(function(){
 		addLetters3D(['R','a', 'd', 'i', 'c', 'a', 'l'], { x: -2.7, y: 1, z: -1.7 }, letrasRadical);
@@ -295,110 +274,86 @@ function addModel(){
 
 				console.log(elements);
 
-				techo = elements.children[16];
+				techo = elements.children[12];
 				techo.renderOrder = 0;
 				techo.name = "techo";
 
 				planta.add(techo);
 
-				banco = elements.children[15];
+				banco = elements.children[11];
 				banco.renderOrder = 0;
 				banco.name = "banco";
 
 				planta.add(banco);
 
-				cristaleraEntrada = elements.children[14];
+				cristaleraEntrada = elements.children[10];
 				cristaleraEntrada.renderOrder = 1;
 				cristaleraEntrada.name = "cristaleraEntrada";
 
 				planta.add(cristaleraEntrada);
 
-				pared = elements.children[13];
+				pared = elements.children[9];
 				pared.renderOrder = 0;
 				pared.name = "pared";
 
 				planta.add(pared);
 
-				cristaleraAgora = elements.children[12];
+				cristaleraAgora = elements.children[8];
 				cristaleraAgora.renderOrder = 1;
 				cristaleraAgora.name = "cristaleraAgora";
 
 				planta.add(cristaleraAgora);
 
-				centro = elements.children[11];
+				centro = elements.children[7];
 				centro.renderOrder = 0;
 				centro.name = "centro";
 
 				interactivos.add(centro);
 
-				research = elements.children[10];
+				research = elements.children[6];
 				research.renderOrder = 0;
 				research.name = "research";
 
 				interactivos.add(research);
 
-				design = elements.children[9];
+				design = elements.children[5];
 				design.renderOrder = 0;
 				design.name = "design";
 
 				interactivos.add(design);
 
-				comunicacion = elements.children[8];
+				comunicacion = elements.children[4];
 				comunicacion.renderOrder = 0;
 				comunicacion.name = "comunicacion";
 
 				interactivos.add(comunicacion);
 
-				clever = elements.children[7];
+				clever = elements.children[3];
 				clever.renderOrder = 0;
 				clever.name = "clever";
 
 				interactivos.add(clever);
 
-				cristaleraFrontal = elements.children[6];
+				cristaleraFrontal = elements.children[2];
 				cristaleraFrontal.renderOrder = 2;
 				cristaleraFrontal.name = "cristaleraFrontal";
 
 				planta.add(cristaleraFrontal);
 
-				sillas = elements.children[5];
+				sillas = elements.children[1];
 				sillas.renderOrder = 0;
 				sillas.name = "sillas";
 
 				planta.add(sillas);
 
-				teles = elements.children[4];
+				teles = elements.children[0];
 				teles.renderOrder = 0;
 				teles.name = "teles";
 
 				planta.add(teles);
 
-				pantalla1 = elements.children[3];
-				pantalla1.renderOrder = 0;
-				pantalla1.name = "pantalla1";
-
-				//planta.add(pantalla1);
-
-				pantalla2 = elements.children[2];
-				pantalla2.renderOrder = 0;
-				pantalla2.name = "pantalla2";
-				//pantalla2.material = movieMaterial;
-
-				planta.add(pantalla2);
-
-				pantalla3 = elements.children[1];
-				pantalla3.renderOrder = 0;
-				pantalla3.name = "pantalla3";
-				//pantalla3.material = movieMaterial;
-
-				planta.add(pantalla3);
-
-				pantalla4 = elements.children[0];
-				pantalla4.renderOrder = 0;
-				pantalla4.name = "pantalla4";
-				//pantalla4.material = movieMaterial;
-
-				planta.add(pantalla4);
+				planta.name = "estructura";
+				interactivos.name = "mesasInteractivos"
 
 				scene.add(planta);
 				scene.add(interactivos);
@@ -492,6 +447,43 @@ function addSpritesLetters(lettersArray){
 	}
 }
 
+function addScreens(){
+	videoMP4 = document.createElement('video').canPlayType('video/mp4') !== '' ? true : false;
+	videoOgg = document.createElement('video').canPlayType('video/ogg') !== '' ? true : false;
+
+	if( videoMP4 ){
+		var url	= 'videos/sintel.mp4';
+		console.log('play mp4');
+	}
+	else if( videoOgg ){
+		var url	= 'videos/sintel.ogv';
+		console.log('play ogg');
+	}
+	else alert('cant play mp4 or ogv')
+
+	videoTexture= new THREEx.VideoTexture(url);
+	video = videoTexture.video;
+
+	var geometry = new THREE.PlaneGeometry( 0.4, 0.25, 1, 1 );
+	var material = new THREE.MeshBasicMaterial({ map	: videoTexture.texture, overdraw: true, side:THREE.DoubleSide });
+	var mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.set( -0.23 , 1.13 , 0.74 );
+	mesh.rotateY( Math.PI/2 );
+	mesh.name = 'screen1';
+
+	var mesh2 = new THREE.Mesh( geometry, material );
+	mesh2.position.set( -0.23 , 1.13 , 4.15 );
+	mesh2.rotateY( Math.PI/2 );
+	mesh2.name = 'screen2';
+
+	screensGroup.add( mesh );
+	screensGroup.add( mesh2 );
+
+	screensGroup.name = "screens";
+
+	scene.add(screensGroup);
+}
+
 function explodeGeometry(){
 	for( var a = 0; a < numVertices; a+=3 ){
 		var number =  Math.random() * (1 - 4) + 1;
@@ -515,7 +507,7 @@ function onDocumentMouseDown( e ) {
 		if ( intersected != intersects[ 0 ].object ) {
 			intersected = intersects[ 0 ].object;
 			console.log('inters ', intersected);
-			video.play();
+			if( video != undefined ) video.play();
 		}
 	}
 	else if ( intersected ) {
@@ -527,7 +519,7 @@ function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize( window.innerWidth, window.innerHeight );
-	if (effect) effect.setSize( window.innerWidth, window.innerHeight );
+	if ( effect != undefined ) effect.setSize( window.innerWidth, window.innerHeight );
 }
 
 function animate() {
@@ -585,7 +577,7 @@ function render(){
 	else if ( intersected ) {
 		console.log(intersected.name); 
 		if( particleCube != undefined ) particlesDisperse( 2000, 'disperse');
-		video.play();
+		//video.play();
 		removeLetters3D();
 		intersected = null;
 		document.body.style.cursor = 'auto';
