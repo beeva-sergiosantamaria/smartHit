@@ -1,17 +1,20 @@
 
-var camera, crosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, sky, plane, particleCube, radicalText,
+var camera, crosshair, loadcrosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, intersectedScreens, intersectedTravel, sky, plane, particleCube, radicalText,
  radicalTextNParticles, researchText, researchTextNParticles, interval,
 	width = window.innerWidth, 
 	height = window.innerHeight;
 
-var  videoMP4, videoOgg, video, videoTexture;	
+var videoMP4, videoOgg, video, videoTexture;	
 
 var centro, design, research, clever, sillas, comunicacion, pared, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, teles, pantalla1, pantalla2, pantalla3, pantalla4;	
+
+var tweenCircleIn, tweenCircleOut, tweenLettersIn, tweenLettersOut;
 
 var clock = new THREE.Clock();
 var mouse = new THREE.Vector2();
 var raycasterMesas = new THREE.Raycaster();
-var raycasterPantallas = new THREE.Raycaster();
+var raycasterTravel = new THREE.Raycaster();
+var raycasterScreens = new THREE.Raycaster();
 
 var manager = new THREE.LoadingManager();
 
@@ -27,6 +30,11 @@ var letrasResearch = new THREE.Object3D();
 	letrasRadical.name = 'letrasResearch';
 var letrasDesign = new THREE.Object3D();
 	letrasRadical.name = 'letrasDesign';
+var travelPoints = new THREE.Object3D();
+	travelPoints.name = 'travelPoints';
+
+var delayTriger	= 3000;
+var activeLetters;
 
 var numeroParticulas = 2000;
 var disperseParticles = { nParticles: numeroParticulas, path: 'disperse' };
@@ -92,7 +100,7 @@ function initRender() {
 	camera = new THREE.PerspectiveCamera( 60, (width/height), 0.01, 10000000 );
 	//camera.position.set( 0, 1.4, 0 );
 	//camera.viewport = { x: 0, y: 0, width: width, height: height }
-	camera.position.set( -0.5, 1.1, -1.7 );
+	camera.position.set( -2, 1.1, 3 );
 
 	scene.add(camera);
 
@@ -113,6 +121,14 @@ function initRender() {
 		);
 		crosshair.position.z = - 2;
 		camera.add( crosshair );
+		loadcrosshair = new THREE.Mesh(
+			new THREE.RingGeometry( 0.009, 0.025, 32, 1, 0, 6.3 ),
+			new THREE.MeshBasicMaterial( {
+				color: 0xcccc00,
+			} )
+		);
+		loadcrosshair.position.z = - 1.95;
+		camera.add( loadcrosshair );
     }
 
     else {
@@ -128,35 +144,26 @@ function initRender() {
 
 	buildShape();
 
-	TweenLite.ticker.addEventListener("tick", render);
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 	document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 
 	function onDocumentMouseMove( event ) {
 
-	    event.preventDefault();
+	    //event.preventDefault();
 
 	    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+		
 	}
 }
 
 function buildShape(){
 
-	addModel();
+	//addParticleSystem();
 
-	addScreens();
-
-	setTimeout(function(){
-		addLetters3D(['R','a', 'd', 'i', 'c', 'a', 'l'], { x: -2.7, y: 1, z: -1.7 }, letrasRadical);
-		addLetters3D(['R','e', 's', 'e', 'a', 'r', 'c', 'h'], { x: -2.7, y: 1, z: 1 }, letrasResearch);
-		addLetters3D(['D','e', 's', 'i', 'g', 'n' ], { x: -2.7, y: 1, z: 3 }, letrasDesign);
-
-		//addParticleSystem();
-
-		//addSpritesLetters(['r','a1', 'd', 'i', 'c', 'a2', 'l']);
-	}, 1000);
+	//addSpritesLetters(['r','a1', 'd', 'i', 'c', 'a2', 'l']);
 
 	var skyGeometry = new THREE.SphereGeometry( 10, 32, 32 );
 	var skyMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/sky2.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
@@ -165,7 +172,7 @@ function buildShape(){
 	sky.rotation.y = 1.7;
 	sky.name = "sky";
 
-	scene.add( sky );
+	addModel();
 }
 
 function particlesDisperse( Particles, path ){
@@ -184,10 +191,10 @@ function reorderParticles( Particles, path ){
 			disperseParticles = { nParticles: Particles, path: 'radical'}; 
 		}
 		else if( particlesAnimation ){
-			movement( { x: -2.7, y: 1, z: -2.1 }, particleCube.position, 0 , 500 );
+			movement( { x: -2.7, y: 1, z: -2.1 }, particleCube.position, 0 , 500, TWEEN.Easing.Back.Out );
 			setTimeout( function(){ particleCube.lookAt( camera.position ); }, 100 );  
 			for( var a = 0; a < Particles; a++ ){
-				movement( { x: radicalText.vertices[a].x, y: radicalText.vertices[a].y, z: radicalText.vertices[a].z }, particleCube.geometry.vertices[a], 0.1*a, 1000 );
+				movement( { x: radicalText.vertices[a].x, y: radicalText.vertices[a].y, z: radicalText.vertices[a].z }, particleCube.geometry.vertices[a], 0.1*a, 1000, TWEEN.Easing.Back.Out );
 				if( a == Particles - 1 ) disperseParticles = { nParticles: Particles, path: 'radical'};
 			}
 		}
@@ -200,10 +207,10 @@ function reorderParticles( Particles, path ){
 			disperseParticles = { nParticles: Particles, path: 'research'}; 
 		}
 		else if(particlesAnimation){
-			movement( { x: -2.7, y: 1, z: 1 }, particleCube.position, 0 , 500 );
+			movement( { x: -2.7, y: 1, z: 1 }, particleCube.position, 0 , 500, TWEEN.Easing.Back.Out );
 			setTimeout( function(){ particleCube.lookAt( camera.position ); }, 100 );  
 			for( var a = 0; a < Particles; a++ ){
-				movement( { x: researchText.vertices[a].x, y: researchText.vertices[a].y, z: researchText.vertices[a].z }, particleCube.geometry.vertices[a], 0.1*a , 1000 );
+				movement( { x: researchText.vertices[a].x, y: researchText.vertices[a].y, z: researchText.vertices[a].z }, particleCube.geometry.vertices[a], 0.1*a , 1000, TWEEN.Easing.Back.Out );
 				if( a == Particles - 1 ) disperseParticles = { nParticles: Particles, path: 'research'};
 			}
 		}
@@ -215,10 +222,10 @@ function reorderParticles( Particles, path ){
 			disperseParticles = { nParticles: numeroParticulas, path: 'disperse'}; 
 		}
 		else if( particlesAnimation ){
-			movement( { x: 0, y: 0, z: 0 }, particleCube.position, 0 , 500 );
+			movement( { x: 0, y: 0, z: 0 }, particleCube.position, 0 , 500, TWEEN.Easing.Back.Out );
 			setTimeout( function(){ particleCube.lookAt( camera.position ); }, 100 );  
 			for( var a = 0; a < Particles; a++ ){
-				movement( { x: verticesArray[a].x, y: verticesArray[a].y, z: verticesArray[a].z }, particleCube.geometry.vertices[a], 0.1*a , 1000 );
+				movement( { x: verticesArray[a].x, y: verticesArray[a].y, z: verticesArray[a].z }, particleCube.geometry.vertices[a], 0.1*a , 1000, TWEEN.Easing.Back.Out );
 				if( a == Particles - 1 ) disperseParticles = { nParticles: numeroParticulas, path: 'disperse'};
 			}
 		}
@@ -226,28 +233,23 @@ function reorderParticles( Particles, path ){
 }
 
 function moveLetters3d(object){
+	activeLetters = object;
 	for ( var a = 0; a < object.children.length; a++ ){
-			movement( { y: 0 }, object.children[a].position, 100 * a , 600 );
-			//interval = setInterval(function(){ movement( { y: Math.PI * 2 }, object.children[a].rotation, 500 * a , 600 ); }, 100);
-			/*var tween = new TWEEN.Tween(letrasRadical.children[a].position)
-				.to({ y: 0.02 }, Math.floor((Math.random() * 2000) + 1000))
-				.easing(TWEEN.Easing.Quadratic.Out);
-			var tweenBack = new TWEEN.Tween(letrasRadical.children[a].position)
-				.to({ y: -0.02 }, Math.floor((Math.random() * 2000) + 1000))
-				.easing(TWEEN.Easing.Quadratic.Out);
-			tween.chain(tweenBack);
-			tweenBack.chain(tween);
-			tween.start();*/
+			//movement( { y: 0 }, object.children[a].position, 100 * a , 600, TWEEN.Easing.Back.Out );
+			tweenLettersIn = new TWEEN.Tween(object.children[a].position).to({ y: 0 }, 600).easing(TWEEN.Easing.Back.Out).onUpdate(function () {}).delay( 100 * a).start();
 	}
+	object.lookAt( camera.position );
 }
 
 function removeLetters3D(){
 	for ( var a = 0; a < 12; a++ ){
-			if( letrasRadical.children[a] ) movement( { y: -3 }, letrasRadical.children[a].position, 100 * a , 400 );
-			if( letrasDesign.children[a] ) movement( { y: -3 }, letrasDesign.children[a].position, 100 * a , 400 );
-			if( letrasResearch.children[a] ) movement( { y: -3 }, letrasResearch.children[a].position, 100 * a , 400 );
+			if( tweenLettersIn != undefined ) tweenLettersIn.stop();
+			//if( activeLetters != undefined ) tweenLettersOut = new TWEEN.Tween(activeLetters.children[a].position).to({ y: -1 }, 200).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 50 * a).start();
+			if( letrasRadical.children[a] ) new TWEEN.Tween(letrasRadical.children[a].position).to({ y: -1.5 }, 200).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 50 * a).start();
+			if( letrasDesign.children[a] ) new TWEEN.Tween(letrasDesign.children[a].position).to({ y: -1.5 }, 200).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 50 * a).start();
+			if( letrasResearch.children[a] ) new TWEEN.Tween(letrasResearch.children[a].position).to({ y: -1.5 }, 200).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 50 * a).start();
 	}
-	clearInterval(interval);
+	//clearInterval(interval);
 }
 
 function addModel(){
@@ -259,7 +261,14 @@ function addModel(){
 				if(percentComplete == 100) {
 					console.log('model loaded!!');
 					setTimeout( function() {
-					
+						addLetters3D(['R','a', 'd', 'i', 'c', 'a', 'l'], { x: -2.7, y: 1, z: -1.7 }, letrasRadical);
+						addLetters3D(['R','e', 's', 'e', 'a', 'r', 'c', 'h'], { x: -2.7, y: 1, z: 1 }, letrasResearch);
+						addLetters3D(['D','e', 's', 'i', 'g', 'n' ], { x: -2.7, y: 1, z: 3 }, letrasDesign);
+
+						addScreens();
+
+						addTravelPoints();
+						scene.add( sky );
 					}, 1000 );
 				}
 			}
@@ -452,6 +461,7 @@ function addSpritesLetters(lettersArray){
 }
 
 function addScreens(){
+
 	videoMP4 = document.createElement('video').canPlayType('video/mp4') !== '' ? true : false;
 	videoOgg = document.createElement('video').canPlayType('video/ogg') !== '' ? true : false;
 
@@ -472,18 +482,33 @@ function addScreens(){
 	var material = new THREE.MeshBasicMaterial({ map	: videoTexture.texture, overdraw: true, side:THREE.DoubleSide });
 	var mesh	= new THREE.Mesh( geometry, material );
 	mesh.position.set( -0.225 , 1.13 , 0.74 );
-	mesh.rotateY( Math.PI/2 );
+	mesh.rotateY( -Math.PI/2 );
 	mesh.name = 'screen1';
 
 	var mesh2 = new THREE.Mesh( geometry, material );
 	mesh2.position.set( -0.225 , 1.13 , 4.15 );
-	mesh2.rotateY( Math.PI/2 );
+	mesh2.rotateY( -Math.PI/2 );
 	mesh2.name = 'screen2';
 
 	screensGroup.add( mesh );
 	screensGroup.add( mesh2 );
 
 	scene.add(screensGroup);
+}
+
+function addTravelPoints(){
+
+	var locationPoints = [{ x: -2, y: 1.4, z: 5 }, { x: -2, y: 1.4, z: 1 }, { x: -2, y: 1.4, z: -2 }];
+
+	for ( var a = 0; a < locationPoints.length; a++ ){
+		var geometry = new THREE.BoxGeometry( 0.1, 0.1, 0.1 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xcccc00} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.set( locationPoints[a].x , locationPoints[a].y, locationPoints[a].z );
+		cube.name = "travelPoints"+a;
+		travelPoints.add( cube );
+		scene.add( travelPoints );
+	}
 }
 
 function explodeGeometry(){
@@ -501,20 +526,21 @@ function explodeGeometry(){
 }
 
 function onDocumentMouseDown( e ) {
-  e.preventDefault();
+ /* e.preventDefault();
   var raycaster = new THREE.Raycaster();
   raycaster.setFromCamera( mouse, camera );
-  var intersects = raycaster.intersectObjects( planta.children );
+  var intersects = raycaster.intersectObjects( screensGroup.children );
    if ( intersects.length > 0 ) {
 		if ( intersected != intersects[ 0 ].object ) {
 			intersected = intersects[ 0 ].object;
+			if( intersected.name == "screen1" ) clickOnELement(intersected);
 			console.log('inters ', intersected);
-			if( video != undefined ) video.play();
+			//if( video != undefined ) video.play();
 		}
 	}
 	else if ( intersected ) {
 		intersected = null;
-	}
+	}*/
 }
 
 function onWindowResize() {
@@ -542,61 +568,104 @@ function animate() {
 function render(){
 
 	if(effect) { effect.render( scene, camera ); }
-    else { renderer.render( scene, camera ); }
+	else { renderer.render( scene, camera ); }
+
+	sky.rotation.y += 0.0003;
+
+	if( particleCube != undefined ) { particleCube.geometry.verticesNeedUpdate = true; /*particleCube.lookAt( camera.position );*/ }
+
+	if( videoTexture != undefined ) videoTexture.update();
+
+	//------------ MESAS INTERSECT -----------------------------
 
     raycasterMesas.setFromCamera( mouse, camera );
-    var intersections = raycasterMesas.intersectObjects( interactivos.children );
+	var intersections = raycasterMesas.intersectObjects( interactivos.children );
 
-    if ( intersections.length > 0 ) {
+	if ( intersections.length > 0 ) {
 		if ( intersected != intersections[ 0 ].object ) {
 			intersected = intersections[ 0 ].object;
 			if( intersected.name == 'centro' ){
+				loadingCircle();
 				console.log(intersections[ 0 ].object.name); 
 				if( particleCube != undefined ) particlesDisperse( radicalTextNParticles, 'radical');
 				if( letrasRadical.children.length > 0 ){
 					removeLetters3D();
 	        		setTimeout( function(){  moveLetters3d(letrasRadical); }, 100 );  
 				}
+				document.body.style.cursor = 'pointer';
 			}
 			else if( intersected.name == 'design' ){
+				loadingCircle();
 				if( particleCube != undefined ) console.log(intersections[ 0 ].object.name); 
 				if( letrasDesign.children.length > 0 ){
 					removeLetters3D();
 	        		setTimeout( function(){  moveLetters3d(letrasDesign); }, 100 );  
 				}
+				document.body.style.cursor = 'pointer';
 			}
 			else if( intersected.name == 'research' ){
+				loadingCircle();
 				console.log(intersections[ 0 ].object.name); 
 				if( particleCube != undefined ) particlesDisperse( researchTextNParticles, 'research');
 				if( letrasResearch.children.length > 0 ){
 					removeLetters3D();
 	        		setTimeout( function(){  moveLetters3d(letrasResearch); }, 100 );  
 				}
+				document.body.style.cursor = 'pointer';
 			} 
-			document.body.style.cursor = 'pointer';
 		}
 	}
 	else if ( intersected ) {
-		console.log(intersected.name); 
+		console.log('es null : ',intersected.name); 
 		if( particleCube != undefined ) particlesDisperse( 2000, 'disperse');
 		//video.play();
-		removeLetters3D();
+		removeLetters3D(); 
+		LoadingReset();
 		intersected = null;
 		document.body.style.cursor = 'auto';
 	}
 
-	sky.rotation.y += 0.0003;
+   //-------- SCREENS INTERSECT -----------	
 
-	if( particleCube != undefined ) { particleCube.geometry.verticesNeedUpdate = true; /*particleCube.lookAt( camera.position );*/ }
+   raycasterScreens.setFromCamera( mouse, camera );
+   var intersectsScreen = raycasterScreens.intersectObjects( screensGroup.children );
+   if ( intersectsScreen.length > 0 ) {
+		if ( intersectedScreens != intersectsScreen[ 0 ].object ) {
+   			loadingCircle();
+			intersectedScreens = intersectsScreen[ 0 ].object;
+			//if( intersectedScreens.name == "screen1" ) clickOnELement(intersectedScreens);
+			console.log('inters ', intersectedScreens);
+			//if( video != undefined ) video.play();
+		}
+		document.body.style.cursor = 'pointer';
+	}
+	else if ( intersectedScreens ) {
+		LoadingReset();
+		intersectedScreens = null;
+		document.body.style.cursor = 'auto';
+	}
 
-	/*if ( video != undefined && video.readyState === video.HAVE_ENOUGH_DATA ) 
-	{
-		videoImageContext.drawImage( video, 0, 0 );
-		if ( videoTexture ) 
-			videoTexture.needsUpdate = true;
-	}*/
+	//--------------- TRAVEL POINTS INTERSECT ------------------
 
-	if( videoTexture != undefined ) videoTexture.update();
+    raycasterTravel.setFromCamera( mouse, camera );
+    var intersectTravel = raycasterTravel.intersectObjects( travelPoints.children );
+    if ( intersectTravel.length > 0 ) {
+		if ( intersectedTravel != intersectTravel[ 0 ].object ) {
+			loadingCircle();
+			intersectedTravel = intersectTravel[ 0 ].object;
+			console.log(intersectedTravel);
+			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, delayTriger, 5000, TWEEN.Easing.Quartic.Out );
+			//loadcrosshair.scale.set( 0.01, 0.01 ,0.01 );
+		}
+		document.body.style.cursor = 'pointer';
+	}
+	else if ( intersectedTravel ) {
+		intersectedTravel = null;
+		LoadingReset();
+		document.body.style.cursor = 'auto';
+	}
+
+	//-----------------------------------------------------------------------		
 
 	/*if(cylinder != undefined ){
 		for( var a = 0; a < numVertices; a+=3 ){
@@ -610,10 +679,24 @@ function render(){
 	}*/
 }
 
-function movement(value, object, delay, duration){
+function loadingCircle(){
+	if( loadcrosshair != undefined ) { 
+		tweenCircleIn = new TWEEN.Tween(loadcrosshair.scale).to({ x: 0.01, y: 0.01, z: 0.01 }, delayTriger).easing(TWEEN.Easing.Quartic.In).onUpdate(function () {}).delay(0).start();
+	}
+}
+
+function LoadingReset(){
+	if( loadcrosshair != undefined ) { 
+		tweenCircleIn.stop();
+		tweenCircleOut = new TWEEN.Tween(loadcrosshair.scale).to({ x: 1, y: 1, z: 1 }, 200).easing(TWEEN.Easing.Quartic.In).onUpdate(function () {}).delay(0).start(); 
+	};
+}
+
+function movement(value, object, delay, duration, easingType){
+	//var easingType = TWEEN.Easing.Back.Out;
     var tween = new TWEEN.Tween(object)
     .to(value, duration)
-    .easing(TWEEN.Easing.Back.Out)
+    .easing(easingType)
     .onUpdate(function () {
           })
     .delay(delay)
