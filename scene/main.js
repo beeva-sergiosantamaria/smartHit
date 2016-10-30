@@ -8,7 +8,7 @@ var videoMP4, videoOgg, video, videoTexture;
 
 var centro, design, research, clever, sillas, comunicacion, pared, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, teles, pantalla1, pantalla2, pantalla3, pantalla4;	
 
-var tweenCircleIn, tweenCircleOut, tweenLettersIn, tweenLettersOut;
+var tweenCircleIn, tweenCircleOut, tweenRadicalIn, tweenResearchIn, tweenDesignIn, tweenLettersIn;
 
 var clock = new THREE.Clock();
 var mouse = new THREE.Vector2();
@@ -235,7 +235,6 @@ function reorderParticles( Particles, path ){
 function moveLetters3d(object){
 	activeLetters = object;
 	for ( var a = 0; a < object.children.length; a++ ){
-			//movement( { y: 0 }, object.children[a].position, 100 * a , 600, TWEEN.Easing.Back.Out );
 			tweenLettersIn = new TWEEN.Tween(object.children[a].position).to({ y: 0 }, 600).easing(TWEEN.Easing.Back.Out).onUpdate(function () {}).delay( 100 * a).start();
 	}
 	object.lookAt( camera.position );
@@ -245,9 +244,9 @@ function removeLetters3D(){
 	for ( var a = 0; a < 12; a++ ){
 			if( tweenLettersIn != undefined ) tweenLettersIn.stop();
 			//if( activeLetters != undefined ) tweenLettersOut = new TWEEN.Tween(activeLetters.children[a].position).to({ y: -1 }, 200).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 50 * a).start();
-			if( letrasRadical.children[a] ) new TWEEN.Tween(letrasRadical.children[a].position).to({ y: -1.5 }, 200).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 50 * a).start();
-			if( letrasDesign.children[a] ) new TWEEN.Tween(letrasDesign.children[a].position).to({ y: -1.5 }, 200).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 50 * a).start();
-			if( letrasResearch.children[a] ) new TWEEN.Tween(letrasResearch.children[a].position).to({ y: -1.5 }, 200).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 50 * a).start();
+			if( letrasRadical.children[a] ) tweenRadicalIn = new TWEEN.Tween(letrasRadical.children[a].position).to({ y: -1.5 }, 100).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 50 * a).start();
+			if( letrasDesign.children[a] ) tweenResearchIn = new TWEEN.Tween(letrasDesign.children[a].position).to({ y: -1.5 }, 100).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 50 * a).start();
+			if( letrasResearch.children[a] ) tweenDesignIn = new TWEEN.Tween(letrasResearch.children[a].position).to({ y: -1.5 }, 100).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 50 * a).start();
 	}
 	//clearInterval(interval);
 }
@@ -681,13 +680,14 @@ function render(){
 
 function loadingCircle(){
 	if( loadcrosshair != undefined ) { 
+		if( tweenCircleOut != undefined ) tweenCircleOut.stop();
 		tweenCircleIn = new TWEEN.Tween(loadcrosshair.scale).to({ x: 0.01, y: 0.01, z: 0.01 }, delayTriger).easing(TWEEN.Easing.Quartic.In).onUpdate(function () {}).delay(0).start();
 	}
 }
 
 function LoadingReset(){
 	if( loadcrosshair != undefined ) { 
-		tweenCircleIn.stop();
+		if( tweenCircleIn != undefined ) tweenCircleIn.stop();
 		tweenCircleOut = new TWEEN.Tween(loadcrosshair.scale).to({ x: 1, y: 1, z: 1 }, 200).easing(TWEEN.Easing.Quartic.In).onUpdate(function () {}).delay(0).start(); 
 	};
 }
