@@ -30,8 +30,8 @@
 		//this.minPolarAngle = Math.PI/1.2; // radians
 		//this.maxPolarAngle = Math.PI/1.05; // radians
 
-		//this.minPolarAngle = Math.PI/2; // radians
-		this.minPolarAngle = 0; // radians
+		this.minPolarAngle = Math.PI/3; // radians
+		//this.minPolarAngle = 0; // radians
 		this.maxPolarAngle = Math.PI/2; // radians
 
 		// How far you can orbit horizontally, upper and lower limits.

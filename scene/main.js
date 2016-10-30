@@ -4,9 +4,11 @@ var camera, crosshair, loadcrosshair, scene, renderer, mesh, mouse, controls, co
 	width = window.innerWidth, 
 	height = window.innerHeight;
 
-var videoMP4, videoOgg, video, videoTexture;	
+var isMobile = false;
 
-var centro, design, research, clever, sillas, comunicacion, pared, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, teles, pantalla1, pantalla2, pantalla3, pantalla4;	
+var videoMP4, videoOgg, video, videoTexture, video2, videoTexture2;	
+
+var centro, design, research, clever, sillas, comunicacion, pared, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, teles, pantalla1, pantalla2, pantalla3, pantalla4;
 
 var tweenCircleIn, tweenCircleOut, tweenRadicalIn, tweenResearchIn, tweenDesignIn, tweenLettersIn;
 
@@ -106,6 +108,7 @@ function initRender() {
 
 
 	if (window.DeviceOrientationEvent && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+		isMobile = true;
 		console.log('navigator: ', navigator);
         console.log("Oriented device");
         effect = new THREE.StereoEffect(renderer);
@@ -119,7 +122,7 @@ function initRender() {
 				color: 0x444444,
 			} )
 		);
-		crosshair.position.z = - 2;
+		crosshair.position.z = - 1.5;
 		camera.add( crosshair );
 		loadcrosshair = new THREE.Mesh(
 			new THREE.RingGeometry( 0.009, 0.025, 32, 1, 0, 6.3 ),
@@ -127,15 +130,18 @@ function initRender() {
 				color: 0xcccc00,
 			} )
 		);
-		loadcrosshair.position.z = - 1.95;
+		loadcrosshair.position.z = - 1.45;
 		camera.add( loadcrosshair );
+
+		addTravelPoints();
     }
 
     else {
 		controls = new THREE.OrbitControls( camera, renderer.domElement );
 		controls.enableDamping = true;
 		controls.dampingFactor = 0.70;
-		controls.enableZoom = true;
+		controls.enableZoom = false;
+		controls.target.set( camera.position.x, camera.position.y, camera.position.z+0.5 );
     }
 
     ambientLight = new THREE.AmbientLight(0xffffff);
@@ -146,16 +152,12 @@ function initRender() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-	document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+	if( !isMobile ) { document.addEventListener( 'mousedown', onDocumentMouseDown, false ); };
 
 	function onDocumentMouseMove( event ) {
-
 	    //event.preventDefault();
-
 	    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
-		
 	}
 }
 
@@ -171,6 +173,8 @@ function buildShape(){
 	sky.renderOrder = 0;
 	sky.rotation.y = 1.7;
 	sky.name = "sky";
+
+	scene.add( sky );
 
 	addModel();
 }
@@ -266,8 +270,6 @@ function addModel(){
 
 						addScreens();
 
-						addTravelPoints();
-						scene.add( sky );
 					}, 1000 );
 				}
 			}
@@ -466,31 +468,41 @@ function addScreens(){
 
 	if( videoMP4 ){
 		var url	= 'videos/sintel.mp4';
+		var url2 = 'videos/salchis.mp4';
 		console.log('play mp4');
 	}
 	else if( videoOgg ){
 		var url	= 'videos/sintel.ogv';
+		var url2 = 'videos/salchis.mp4';
 		console.log('play ogg');
 	}
 	else alert('cant play mp4 or ogv')
 
-	videoTexture= new THREEx.VideoTexture(url);
+	videoTexture = new THREEx.VideoTexture(url);
 	video = videoTexture.video;
 
-	var geometry = new THREE.PlaneGeometry( 0.4, 0.25, 1, 1 );
-	var material = new THREE.MeshBasicMaterial({ map	: videoTexture.texture, overdraw: true, side:THREE.DoubleSide });
-	var mesh	= new THREE.Mesh( geometry, material );
-	mesh.position.set( -0.225 , 1.13 , 0.74 );
-	mesh.rotateY( -Math.PI/2 );
-	mesh.name = 'screen1';
+	videoTexture2 = new THREEx.VideoTexture(url2);
+	video2 = videoTexture2.video;
 
-	var mesh2 = new THREE.Mesh( geometry, material );
-	mesh2.position.set( -0.225 , 1.13 , 4.15 );
-	mesh2.rotateY( -Math.PI/2 );
-	mesh2.name = 'screen2';
+	video.pause();
+	video2.pause();
 
-	screensGroup.add( mesh );
-	screensGroup.add( mesh2 );
+	var screen1Geometry = new THREE.PlaneGeometry( 0.4, 0.25, 1, 1 );
+	var screen1Material = new THREE.MeshBasicMaterial({ map	: videoTexture.texture, overdraw: true, side: THREE.DoubleSide });
+	var screen1Mesh = new THREE.Mesh( screen1Geometry, screen1Material );
+	screen1Mesh.position.set( -0.225 , 1.13 , 0.74 );
+	screen1Mesh.rotateY( -Math.PI/2 );
+	screen1Mesh.name = 'screen1';
+
+	var screen2Geometry = new THREE.PlaneGeometry( 0.4, 0.25, 1, 1 );
+	var screen2Material = new THREE.MeshBasicMaterial({ map	: videoTexture2.texture, overdraw: true, side: THREE.DoubleSide });
+	var screen2mesh = new THREE.Mesh( screen2Geometry, screen2Material );
+	screen2mesh.position.set( -0.225 , 1.13 , 4.15 );
+	screen2mesh.rotateY( -Math.PI/2 );
+	screen2mesh.name = 'screen2';
+
+	screensGroup.add( screen1Mesh );
+	screensGroup.add( screen2mesh );
 
 	scene.add(screensGroup);
 }
@@ -525,21 +537,35 @@ function explodeGeometry(){
 }
 
 function onDocumentMouseDown( e ) {
- /* e.preventDefault();
+  //e.preventDefault();
   var raycaster = new THREE.Raycaster();
   raycaster.setFromCamera( mouse, camera );
   var intersects = raycaster.intersectObjects( screensGroup.children );
    if ( intersects.length > 0 ) {
 		if ( intersected != intersects[ 0 ].object ) {
 			intersected = intersects[ 0 ].object;
-			if( intersected.name == "screen1" ) clickOnELement(intersected);
+			if( intersected.name == "screen1" ) { 
+				if( video != undefined ) { 
+					video2.pause(); 
+					video.play(); 
+					controls.target.set( intersected.position.x, intersected.position.y, intersected.position.z );
+					movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out );
+				} 
+			}
+			if( intersected.name == "screen2" ) { 
+				if( video2 != undefined ) { 
+					video.pause(); 
+					video2.play();
+					controls.target.set( intersected.position.x, intersected.position.y, intersected.position.z );
+					movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out ); 
+				} 
+			};
 			console.log('inters ', intersected);
-			//if( video != undefined ) video.play();
 		}
 	}
 	else if ( intersected ) {
 		intersected = null;
-	}*/
+	}
 }
 
 function onWindowResize() {
@@ -575,16 +601,18 @@ function render(){
 
 	if( videoTexture != undefined ) videoTexture.update();
 
+	if( videoTexture2 != undefined ) videoTexture2.update();
+
 	//------------ MESAS INTERSECT -----------------------------
 
     raycasterMesas.setFromCamera( mouse, camera );
 	var intersections = raycasterMesas.intersectObjects( interactivos.children );
 
 	if ( intersections.length > 0 ) {
+		if( loadcrosshair.scale.x > -0.05) loadcrosshair.scale.set( loadcrosshair.scale.x - 0.01, loadcrosshair.scale.y - 0.01, loadcrosshair.scale.z - 0.01 );
 		if ( intersected != intersections[ 0 ].object ) {
 			intersected = intersections[ 0 ].object;
 			if( intersected.name == 'centro' ){
-				loadingCircle();
 				console.log(intersections[ 0 ].object.name); 
 				if( particleCube != undefined ) particlesDisperse( radicalTextNParticles, 'radical');
 				if( letrasRadical.children.length > 0 ){
@@ -617,9 +645,9 @@ function render(){
 	else if ( intersected ) {
 		console.log('es null : ',intersected.name); 
 		if( particleCube != undefined ) particlesDisperse( 2000, 'disperse');
+		loadcrosshair.scale.set( 1, 1, 1 );
 		//video.play();
 		removeLetters3D(); 
-		LoadingReset();
 		intersected = null;
 		document.body.style.cursor = 'auto';
 	}
@@ -629,8 +657,8 @@ function render(){
    raycasterScreens.setFromCamera( mouse, camera );
    var intersectsScreen = raycasterScreens.intersectObjects( screensGroup.children );
    if ( intersectsScreen.length > 0 ) {
+   		if( loadcrosshair.scale.x > -0.05) loadcrosshair.scale.set( loadcrosshair.scale.x - 0.01, loadcrosshair.scale.y - 0.01, loadcrosshair.scale.z - 0.01 )
 		if ( intersectedScreens != intersectsScreen[ 0 ].object ) {
-   			loadingCircle();
 			intersectedScreens = intersectsScreen[ 0 ].object;
 			//if( intersectedScreens.name == "screen1" ) clickOnELement(intersectedScreens);
 			console.log('inters ', intersectedScreens);
@@ -639,8 +667,8 @@ function render(){
 		document.body.style.cursor = 'pointer';
 	}
 	else if ( intersectedScreens ) {
-		LoadingReset();
 		intersectedScreens = null;
+		loadcrosshair.scale.set( 1, 1, 1 );
 		document.body.style.cursor = 'auto';
 	}
 
@@ -649,18 +677,18 @@ function render(){
     raycasterTravel.setFromCamera( mouse, camera );
     var intersectTravel = raycasterTravel.intersectObjects( travelPoints.children );
     if ( intersectTravel.length > 0 ) {
+    	if( loadcrosshair.scale.x > -0.05) loadcrosshair.scale.set( loadcrosshair.scale.x - 0.01, loadcrosshair.scale.y - 0.01, loadcrosshair.scale.z - 0.01 )
+    	console.log('travel Counter: ', loadcrosshair.scale.x);
+    	if( loadcrosshair.scale.x < 0 ) { movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out ); };
 		if ( intersectedTravel != intersectTravel[ 0 ].object ) {
-			loadingCircle();
 			intersectedTravel = intersectTravel[ 0 ].object;
 			console.log(intersectedTravel);
-			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, delayTriger, 5000, TWEEN.Easing.Quartic.Out );
-			//loadcrosshair.scale.set( 0.01, 0.01 ,0.01 );
 		}
 		document.body.style.cursor = 'pointer';
 	}
 	else if ( intersectedTravel ) {
 		intersectedTravel = null;
-		LoadingReset();
+		loadcrosshair.scale.set( 1, 1, 1 );
 		document.body.style.cursor = 'auto';
 	}
 
@@ -676,20 +704,6 @@ function render(){
 			cylinder.geometry.verticesNeedUpdate = true; // important
 		}
 	}*/
-}
-
-function loadingCircle(){
-	if( loadcrosshair != undefined ) { 
-		if( tweenCircleOut != undefined ) tweenCircleOut.stop();
-		tweenCircleIn = new TWEEN.Tween(loadcrosshair.scale).to({ x: 0.01, y: 0.01, z: 0.01 }, delayTriger).easing(TWEEN.Easing.Quartic.In).onUpdate(function () {}).delay(0).start();
-	}
-}
-
-function LoadingReset(){
-	if( loadcrosshair != undefined ) { 
-		if( tweenCircleIn != undefined ) tweenCircleIn.stop();
-		tweenCircleOut = new TWEEN.Tween(loadcrosshair.scale).to({ x: 1, y: 1, z: 1 }, 200).easing(TWEEN.Easing.Quartic.In).onUpdate(function () {}).delay(0).start(); 
-	};
 }
 
 function movement(value, object, delay, duration, easingType){
