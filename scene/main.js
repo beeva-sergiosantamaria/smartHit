@@ -1,6 +1,6 @@
 
-var camera, crosshair, loadcrosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, intersectedScreens, intersectedTravel, sky, plane, particleCube, radicalText,
- radicalTextNParticles, researchText, researchTextNParticles, interval, 
+var camera, crosshair, loadcrosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, intersectedScreens, intersectedTravel, intersectedInfo, intersectedMembers, intersectedExit, sky, plane, particleCube, radicalText,
+ radicalTextNParticles, researchText, researchTextNParticles, interval, radicallight, researchlight, designlight, screen1Light, screen2Light, actualLab, exitIcon,
 	width = window.innerWidth, 
 	height = window.innerHeight;
 
@@ -17,8 +17,34 @@ var mouse = new THREE.Vector2();
 var raycasterMesas = new THREE.Raycaster();
 var raycasterTravel = new THREE.Raycaster();
 var raycasterScreens = new THREE.Raycaster();
+var raycasterInfo = new THREE.Raycaster();
+var raycasterMembers = new THREE.Raycaster();
+var raycasterExit = new THREE.Raycaster();
 
 var manager = new THREE.LoadingManager();
+
+
+var radicalMembers = [
+	{ name: 'david', position: { x: -2, y: 0.8, z: -1.1 }  },
+	{ name: 'marian', position: { x: -2.9, y: 0.8, z: -1.2 }  },
+	{ name: 'sergio', position: { x: -3.2, y: 0.8, z: -1.9 }  },
+	{ name: 'carlos', position: { x: -2.9, y: 0.8, z: -2.7 }  },
+	{ name: 'paula', position: { x: -2, y: 0.8, z: -2.8 }  }
+];
+
+var checkstatus = {
+	mesas: true,
+	infoCard: true,
+	members: true,
+	travel: true,
+	screens: true
+}
+
+var radicalInfoImages = ['radicalInfo1','radicalInfo2','radicalInfo3'];
+var sergioInfoImages = ['sergioInfo1', 'sergioInfo2','sergioInfo3'];
+
+var membersAdded = false;
+var sectionInfoAdded = false;
 
 var planta = new THREE.Object3D();
 	planta.name = "estructura";
@@ -36,6 +62,12 @@ var travelPoints = new THREE.Object3D();
 	travelPoints.name = 'travelPoints';
 var spriteGroup = new THREE.Object3D();
 	spriteGroup.name = 'spriteGroup';
+var membersGroup = new THREE.Object3D();
+	membersGroup.name = 'members';
+var infoGroup = new THREE.Object3D();
+	infoGroup.name = 'infoGroup';
+var exitGroup = new THREE.Object3D();
+	exitGroup.name = 'exitGroup';	
 
 var delayTriger	= 3000;
 var activeLetters;
@@ -109,7 +141,6 @@ function initRender() {
 
 	scene.add(camera);
 
-
 	if (window.DeviceOrientationEvent && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
 		isMobile = true;
 		console.log('navigator: ', navigator);
@@ -122,19 +153,25 @@ function initRender() {
 		crosshair = new THREE.Mesh(
 			new THREE.RingGeometry( 0.000001, 0.009, 32 ),
 			new THREE.MeshBasicMaterial( {
-				color: 0x666666,
+				color: 0x666600,
 			} )
 		);
 		crosshair.position.z = - 1.5;
 		camera.add( crosshair );
 		loadcrosshair = new THREE.Mesh(
-			new THREE.RingGeometry( 0.000001, 0.0093, 32 ),
+			new THREE.RingGeometry( 0.02, 0.025, 32 ),
 			new THREE.MeshBasicMaterial( {
-				color: 0xffdd44,
+				color: 0x666666
 			} )
 		);
 		loadcrosshair.position.z = - 1.45;
+		loadcrosshair.visible = false;
 		camera.add( loadcrosshair );
+
+		/*var spotLight = new THREE.PointLight( 0xffee66, 1, 1, 1 );
+		spotLight.position.set( 0, 0, -2 );
+
+		camera.add(spotLight);*/
 
 		addTravelPoints();
     }
@@ -145,6 +182,12 @@ function initRender() {
 		controls.dampingFactor = 0.70;
 		controls.enableZoom = false;
 		controls.target.set( camera.position.x, camera.position.y, camera.position.z+0.5 );
+		crosshair = new THREE.Mesh(
+			new THREE.RingGeometry( 0.000001, 0.009, 32 ),
+			new THREE.MeshBasicMaterial( {
+				color: 0x666666,
+			} )
+		);
 
 		addTravelPoints();
     }
@@ -153,17 +196,33 @@ function initRender() {
     ambientLight.position.set(0,0.6,0);
     scene.add(ambientLight);
 
+    radicallight = new THREE.PointLight( 0xffee66, 0, 2.5, 1 );
+	radicallight.position.set( -2.5, 0.8, -2 );
+	scene.add( radicallight );
+
+	if( !isMobile ){
+		researchlight = new THREE.PointLight( 0xff9999, 0, 2.5, 1 );
+		researchlight.position.set( -2.5, 0.8, 0.5 );
+		scene.add( researchlight );
+
+		designlight = new THREE.PointLight( 0x9999ff, 0, 2.5, 1 );
+		designlight.position.set( -2.5, 0.8, 2.5 );
+		scene.add( designlight );
+
+		screen1Light = new THREE.PointLight( 0xffffff, 0, 1, 1 );
+		screen1Light.position.set( -0.4 , 1.1 , 0.74 );
+		scene.add( screen1Light );
+
+		screen2Light = new THREE.PointLight( 0xffffff, 0, 1, 1 );
+		screen2Light.position.set( -0.4 , 1.1 , 4.15 );
+		scene.add( screen2Light );
+	}
+
 	buildShape();
 
 	window.addEventListener( 'resize', onWindowResize, false );
-	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+	if( !isMobile ) { document.addEventListener( 'mousemove', onDocumentMouseMove, false ); };
 	if( !isMobile ) { document.addEventListener( 'mousedown', onDocumentMouseDown, false ); };
-
-	function onDocumentMouseMove( event ) {
-	    //event.preventDefault();
-	    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-	}
 }
 
 function buildShape(){
@@ -171,6 +230,8 @@ function buildShape(){
 	//addParticleSystem();
 
 	//addSpritesLetters(['r','a1', 'd', 'i', 'c', 'a2', 'l']);
+
+	//addExitIcon();
 
 	var skyGeometry = new THREE.SphereGeometry( 10, 32, 32 );
 	var skyMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/sky2.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
@@ -363,6 +424,23 @@ function addModel(){
 		});
 }
 
+function addExitIcon(position){
+	var objLoader = new THREE.OBJLoader();
+		objLoader.setPath( 'models/' );	
+		objLoader.load( 'exitModel.obj', function ( elements ) {
+			console.log('icono exit: ', elements);
+			var exitMaterial = new THREE.MeshBasicMaterial( { color: 0xffdd44 } );
+			exitIcon = new THREE.Mesh (elements.children[0].geometry, exitMaterial );
+			exitIcon.position.set( position.x, position.y + 1, position.z );
+			//exitIcon.position.set(-2.5, 0.8, -2);
+			exitIcon.scale.set( 0.1, 0.2, 0.2 );
+			exitGroup.add( exitIcon );
+			scene.add( exitGroup );
+			movement({ y: position.y }, exitIcon.position, 300, 1000, TWEEN.Easing.Back.Out );
+		});
+
+}
+
 function addLetters3D(lettersArray, position, object){
 
 	var loader = new THREE.FontLoader();
@@ -440,12 +518,22 @@ function addSpritesLetters(lettersArray){
 		var map = new THREE.TextureLoader().load( "images/letters/"+ lettersArray[a] +".png" );
 	    var material = new THREE.SpriteMaterial( { map: map, color: 0xffffff, fog: true } );
 	    var sprite = new THREE.Sprite( material );
-	    sprite.position.x = 0.03 * a;
-	    sprite.position.z = -1.5;
-	    sprite.scale.set( 0.03, 0.03, 0.03 );
-	    spriteGroup.add(sprite);
-	    spriteGroup.position.x = -0.13;
-	    spriteGroup.position.y = -0.06;
+	    if( isMobile ){
+		    sprite.position.x = 0.03 * a;
+		    sprite.position.z = -1.5;
+		    sprite.scale.set( 0.03, 0.03, 0.03 );
+		    spriteGroup.add(sprite);
+		    spriteGroup.position.x = -0.13;
+		    spriteGroup.position.y = -0.06;
+	    }
+	    else {
+		    sprite.position.x = 0.04 * a;
+		    sprite.position.z = -0.5;
+		    sprite.scale.set( 0.05, 0.05, 0.05 );
+		    spriteGroup.add(sprite);
+		    spriteGroup.position.x = -0.6;
+		    spriteGroup.position.y = -0.25;
+	    }
 	    camera.add( spriteGroup );
 	}
 }
@@ -505,11 +593,11 @@ function addScreens(){
 
 function addTravelPoints(){
 
-	var locationPoints = [{ x: -0.7, y: 1.3, z: -5.5 }, { x: -1.5, y: 1.3, z: 2.5 }, { x: -0.3, y: 1.3, z: -1.5 }];
+	var locationPoints = [{ x: -0.7, y: 1.3, z: -5.5 }, { x: -2, y: 1.3, z: 2.5 }, { x: -0.3, y: 1.3, z: -1.5 }];
 	var namePoints = ['makerPoint', 'tvPoint', 'labsPoint'];
 
 	for ( var a = 0; a < locationPoints.length; a++ ){
-		var geometry = new THREE.BoxGeometry( 0.1, 0.1, 0.1 );
+		var geometry = new THREE.TetrahedronGeometry( 0.2, 0 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xffdd44} );
 		var cube = new THREE.Mesh( geometry, material );
 		cube.position.set( locationPoints[a].x , locationPoints[a].y, locationPoints[a].z );
@@ -517,6 +605,110 @@ function addTravelPoints(){
 		travelPoints.add( cube );
 		scene.add( travelPoints );
 	}
+}
+
+function addMembers(members) {
+	checkstatus.mesas = false;
+	setTimeout(function(){
+		for( var a = 0; a < members.length; a++ ){
+			var map = new THREE.TextureLoader().load( "images/membersPhoto/"+ members[a].name +".png" );
+			var material = new THREE.SpriteMaterial( { map: map, color: 0xffffff, fog: true } );
+		    var sprite = new THREE.Sprite( material );
+		    sprite.position.set( members[a].position.x, members[a].position.y-2, members[a].position.z );
+		    sprite.name = members[a].name;
+		    sprite.scale.set( 0.6, 0.6, 0.6 );
+		    membersGroup.add( sprite );
+		    movement({ y: members[a].position.y }, sprite.position, 300*a, 500, TWEEN.Easing.Back.Out );
+		}
+		membersAdded = true;
+		scene.add(membersGroup);
+	}, 2000);
+}
+
+function removeMembers(){
+	var nummemberActually = membersGroup.children.length;
+	for( var a = 0; a < nummemberActually; a++ ){
+		movement({ y: -1 }, membersGroup.children[a].position, 0, 500, TWEEN.Easing.Back.In );
+		if( a == nummemberActually - 1 ) {
+			membersGroup = new THREE.Object3D();
+			membersGroup.name = 'members';
+			membersAdded = false;
+		}
+	}
+}
+
+function addInfoSection(images, name, timeout) {
+	sectionInfoAdded = true;
+	if( infoGroup.children.length > 0 ) { 
+		hideInfo();
+	};
+	setTimeout(function(){
+		scene.remove( infoGroup );
+		infoGroup = new THREE.Object3D();
+		infoGroup.name = 'infoGroup';
+		for( var a = 0; a <3; a++){
+		    var texture = THREE.ImageUtils.loadTexture( "images/sectionInfo/"+ images[a] +".png" );
+			var geometry = new THREE.PlaneGeometry( 1, 0.6, 1 );
+			var material = new THREE.MeshBasicMaterial( {map : texture, transparent: true, opacity: 1, color: 0xFF0000, color: 0xffffff } );
+			var plane = new THREE.Mesh( geometry, material );
+			plane.name = name;
+			infoGroup.add( plane );
+		}
+		infoGroup.position.set( -2.3, 0.35 - 2, -1.95 );
+		infoGroup.rotation.y = Math.PI/2;
+	    movement({ y: 0.35 }, infoGroup.position, 1, 500, TWEEN.Easing.Back.Out );
+		scene.add(infoGroup);
+	}, timeout);
+	
+}
+
+function openInfo(){
+	checkstatus.members = false;
+	checkstatus.infoCard = false;
+	removeSpriteLetters(); 
+	if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
+	movement({ y: 1 }, infoGroup.position, 1, 500, TWEEN.Easing.Back.Out );
+	movement({ x: -1.8 }, infoGroup.position, 1, 500, TWEEN.Easing.Quartic.Out );
+	setTimeout(function(){	
+		movement({ x: 1 }, infoGroup.children[1].position, 1, 1000, TWEEN.Easing.Quartic.Out );
+		movement({ x: -1 }, infoGroup.children[2].position, 1, 1000, TWEEN.Easing.Quartic.Out );
+	},700);
+	setTimeout(function(){
+		movement({ x: 0.77 }, infoGroup.children[1].position, 1, 1000, TWEEN.Easing.Quartic.Out );	
+		movement({ y: -1 }, infoGroup.children[1].rotation, 1, 1000, TWEEN.Easing.Quartic.Out );
+		movement({ z: 0.42 }, infoGroup.children[1].position, 1, 1000, TWEEN.Easing.Quartic.Out );
+		movement({ x: -0.77 }, infoGroup.children[2].position, 1, 1000, TWEEN.Easing.Quartic.Out );
+		movement({ y: 1 }, infoGroup.children[2].rotation, 1, 1000, TWEEN.Easing.Quartic.Out );
+		movement({ z: 0.42 }, infoGroup.children[2].position, 1, 1000, TWEEN.Easing.Quartic.Out );
+		addExitIcon({ x: -1.7, y: 0.5 ,z: -1.95 });
+	},1700);
+}
+
+function hideInfo(){
+		checkstatus.members = true;
+		checkstatus.infoCard = true;
+		if( exitGroup.children.length > 0 ) movement({ y: exitIcon.position.y - 1}, exitIcon.position, 1, 500, TWEEN.Easing.Quartic.Out );	
+		if( infoGroup.children[1].position.x > 0 ) movement({ x: 1}, infoGroup.children[1].position, 1, 1000, TWEEN.Easing.Quartic.Out );	
+		movement({ y: 0 }, infoGroup.children[1].rotation, 1, 1000, TWEEN.Easing.Quartic.Out );
+		movement({ z: -0.01 }, infoGroup.children[1].position, 1, 1000, TWEEN.Easing.Quartic.Out );
+		if( infoGroup.children[2].position.x < 0 ) movement({ x: -1 }, infoGroup.children[2].position, 1, 1000, TWEEN.Easing.Quartic.Out );
+		movement({ y: 0 }, infoGroup.children[2].rotation, 1, 1000, TWEEN.Easing.Quartic.Out );
+		movement({ z: 0.01 }, infoGroup.children[2].position, 1, 1000, TWEEN.Easing.Quartic.Out );
+	setTimeout(function(){
+		movement({ x: 0 }, infoGroup.children[1].position, 1, 1000, TWEEN.Easing.Quartic.Out );
+		movement({ x: 0 }, infoGroup.children[2].position, 1, 1000, TWEEN.Easing.Quartic.Out );
+	}, 1000)
+	setTimeout(function(){	
+		movement({ y: 0.35 }, infoGroup.position, 500, 500, TWEEN.Easing.Back.Out );
+		movement({ x: -2.3 }, infoGroup.position, 0, 500, TWEEN.Easing.Quartic.Out );
+		scene.remove(exitGroup);
+	},2200);
+}
+
+function removeInfoSection(){
+	hideInfo();
+	movement({ y: -1 }, infoGroup.position, 1200, 500, TWEEN.Easing.Back.In );
+	setTimeout(function(){ scene.remove(infoGroup); infoGroup = new THREE.Object3D(); infoGroup.name = 'infoGroup'; sectionInfoAdded = false; },1300);
 }
 
 function explodeGeometry(){
@@ -536,7 +728,7 @@ function explodeGeometry(){
 function moveLetters3d(object, prevObject){
 	for ( var a = 0; a < 12; a++ ){
 			if( prevObject != undefined && prevObject.children[a] ) new TWEEN.Tween( prevObject.children[a].position).to({ y: -1.5 }, 100 ).easing(TWEEN.Easing.Quartic.Out).onUpdate(function () {}).delay( 10 * a).start();
-			if( object != undefined && object.children[a] ) new TWEEN.Tween( object.children[a].position).to({ y: 0 }, 100).easing(TWEEN.Easing.Back.Out).onUpdate(function () {}).delay( 10 * a).start();
+			if( object != undefined && object.children[a] ) new TWEEN.Tween( object.children[a].position).to({ y: 0.2 }, 100).easing(TWEEN.Easing.Back.Out).onUpdate(function () {}).delay( 10 * a).start();
 	}
 	if( object != undefined ) object.lookAt( camera.position );
 }
@@ -552,36 +744,287 @@ function removeLetters3D(object){
 	//clearInterval(interval);
 }
 
-function onDocumentMouseDown( e ) {
-  //e.preventDefault();
-  var raycaster = new THREE.Raycaster();
-  raycaster.setFromCamera( mouse, camera );
-  var intersects = raycaster.intersectObjects( screensGroup.children );
-   if ( intersects.length > 0 ) {
-		if ( intersected != intersects[ 0 ].object ) {
-			intersected = intersects[ 0 ].object;
-			if( intersected.name == "screen1" ) { 
-				if( video != undefined ) { 
-					video2.pause(); 
-					video.play(); 
-					controls.target.set( intersected.position.x, intersected.position.y, intersected.position.z );
-					movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out );
-				} 
+function onDocumentMouseMove( event ) {
+    //event.preventDefault();
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    //-------------- SCREEN INTERSECTION ---------------------
+	var raycaster = new THREE.Raycaster();
+		raycaster.setFromCamera( mouse, camera );
+	var intersects = raycaster.intersectObjects( screensGroup.children );
+	if ( intersects.length > 0 ) {
+		document.body.style.cursor = 'pointer';
+	}
+	else document.body.style.cursor = 'auto';
+	//-------------- TRAVEL POINTS INTERSECTION ---------------------
+	var raycasterTravel = new THREE.Raycaster();
+		raycasterTravel.setFromCamera( mouse, camera );
+    var intersectTravel = raycasterTravel.intersectObjects( travelPoints.children );
+    if ( intersectTravel.length > 0 ) {
+		if ( intersectedTravel != intersectTravel[ 0 ].object ) {
+			intersectedTravel = intersectTravel[ 0 ].object;
+    		if( intersectedTravel.name == 'makerPoint' ) addSpritesLetters(['m','a', 'k', 'e', 'r', 'blanck', 's', 'p', 'a', 'c', 'e']);
+    		if( intersectedTravel.name == 'labsPoint' ) addSpritesLetters(['blanck','blanck','blanck','blanck','l','a', 'b', 's']);
+    		if( intersectedTravel.name == 'tvPoint' ) addSpritesLetters(['blanck','blanck','v','i', 'd', 'e','o', 's']);
+    	}
+		document.body.style.cursor = 'pointer';		
+	}
+	else if(intersectedTravel){ 
+		removeSpriteLetters();
+		intersectedTravel = null;  
+		document.body.style.cursor = 'auto';
+	}	
+	//-------------- MESAS INTERSECTION ---------------------
+
+	if( checkstatus.mesas ){
+		var raycasterMesas = new THREE.Raycaster();
+			raycasterMesas.setFromCamera( mouse, camera );
+		var intersections = raycasterMesas.intersectObjects( interactivos.children );
+		if ( intersections.length > 0 ) {
+			if ( intersected != intersections[ 0 ].object ) {
+				intersected = intersections[ 0 ].object;
+				if( intersected.name == 'centro' ){ 
+					addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
+					moveLetters3d( letrasRadical, activeLetters );
+					if( particleCube != undefined ) particlesDisperse( radicalTextNParticles, 'radical');
+					if( letrasRadical.children.length > 0 ){
+		        		setTimeout( function(){ activeLetters = letrasRadical; }, 100 );  
+					}
+				}
+				else if( intersections[ 0 ].object.name == 'design' ){
+					addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
+					moveLetters3d(letrasDesign, activeLetters);
+					if( particleCube != undefined ) console.log(intersections[ 0 ].object.name); 
+					if( letrasDesign.children.length > 0 ){
+		        		setTimeout( function(){ activeLetters = letrasDesign; }, 100 );  
+					}		
+				}
+				else if( intersections[ 0 ].object.name == 'research' ){ 
+					addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
+					moveLetters3d( letrasResearch, activeLetters );
+					if( particleCube != undefined ) particlesDisperse( researchTextNParticles, 'radical');
+					if( letrasResearch.children.length > 0 ){
+		        		setTimeout( function(){ activeLetters = letrasResearch; }, 100 );  
+					}
+				}
 			}
-			if( intersected.name == "screen2" ) { 
-				if( video2 != undefined ) { 
-					video.pause(); 
-					video2.play();
-					controls.target.set( intersected.position.x, intersected.position.y, intersected.position.z );
-					movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out ); 
-				} 
-			};
-			console.log('inters ', intersected);
+		document.body.style.cursor = 'pointer';
+		}
+		else if ( intersected ) {
+			moveLetters3d( undefined, activeLetters );
+			removeSpriteLetters(); 
+			if( particleCube != undefined ) particlesDisperse( 2000, 'disperse');
+			intersected = null; 
+			document.body.style.cursor = 'auto';
 		}
 	}
-	else if ( intersected ) {
-		intersected = null;
+	//----------- PANEL INFO INTERSECTIONS ---------
+	if( checkstatus.infoCard ){
+		raycasterInfo.setFromCamera( mouse, camera );
+		var intersectInfo = raycasterTravel.intersectObjects( infoGroup.children );
+		if ( intersectInfo.length > 0 ) {
+			document.body.style.cursor = 'pointer';
+		}
 	}
+	/*else {
+		document.body.style.cursor = 'auto';
+	}*/
+
+	//---------------------------------------------	
+	//---------------------- MEMBERS GROUP --------------------------------------
+
+	raycasterMembers.setFromCamera( mouse, camera );
+	var intersectMembers = raycasterTravel.intersectObjects( membersGroup.children );
+	if ( intersectMembers.length > 0 ) {
+    		document.body.style.cursor = 'pointer';
+	}
+
+	//------------------------------------------------------------------------		
+	//---------------------- EXIT --------------------------------------------
+
+	raycasterExit.setFromCamera( mouse, camera );
+	var intersectExit = raycasterExit.intersectObjects( exitGroup.children );
+	if ( intersectExit.length > 0 ) {
+		if( intersectedExit != intersectExit[0].object ){
+			intersectedExit = intersectExit[0].object;
+			exitIcon.material.color.setHex( 0x00ff00 );
+		}
+		else if( intersectedExit ){
+			intersectedExit = null;
+			exitIcon.material.color.setHex( 0xffdd44 );
+		}
+    	document.body.style.cursor = 'pointer';
+	}
+
+	//------------------------------------------------------------------------		
+}
+
+function onDocumentMouseDown( e ) {
+  //e.preventDefault();
+
+  //-------------- SCREEN INTERACTION ---------------------
+  if( checkstatus.screens ){
+	   var raycaster = new THREE.Raycaster();
+	   raycaster.setFromCamera( mouse, camera );
+	   var intersects = raycaster.intersectObjects( screensGroup.children );
+	   if ( intersects.length > 0 ) {
+			if ( intersected != intersects[ 0 ].object ) {
+				intersected = intersects[ 0 ].object;
+				if( intersected.name == "screen1" ) { 
+					if( video != undefined ) { 
+						video2.pause(); 
+						video.play(); 
+						movement({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z }, controls.target, 0, 1000, TWEEN.Easing.Quartic.Out );
+						movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out );
+					} 
+				}
+				if( intersected.name == "screen2" ) { 
+					if( video2 != undefined ) { 
+						video.pause(); 
+						video2.play();
+						movement({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z }, controls.target, 0, 1000, TWEEN.Easing.Quartic.Out );
+						movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out ); 
+					} 
+				};
+				console.log('inters ', intersected);
+			}
+		}
+  	}
+	//----------------------------------------------
+	if( checkstatus.mesas ){
+		raycasterMesas.setFromCamera( mouse, camera );
+		var intersections = raycasterMesas.intersectObjects( interactivos.children );
+		if ( intersections.length > 0 ) {
+			if( intersections[ 0 ].object.name == 'centro' ){ 
+				if( !membersAdded ) {
+					addMembers(radicalMembers);
+				}	
+	    		else if( infoGroup.children.length > 0 && actualLab != 'centro' ){		
+					removeMembers();
+					removeInfoSection();
+	    		}
+				actualLab = 'centro';
+				movement({ intensity: 2 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0.1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, screen1Light, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ x: -0.6, y: 1.1, z: -2 }, camera.position, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	if( !sectionInfoAdded ) addInfoSection( radicalInfoImages, 'radicalInfo', 4000);
+		    	else if( infoGroup.children[0].name != 'radicalInfo' ) { addInfoSection( radicalInfoImages, 'radicalInfo', 300 );};
+		    	if( controls ) movement({ x: -0.7, y: 1.1, z: -2 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out );
+			}
+			else if( intersections[ 0 ].object.name == 'design' ){
+	    		if( infoGroup.children.length > 0 ){		
+					removeMembers();
+					removeInfoSection();
+	    		}
+				actualLab = 'design';
+				movement({ intensity: 2 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0.1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, screen1Light, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ x: -0.6, y: 1.1, z: 2.5 }, camera.position, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	if( controls ) movement({ x: -0.7, y: 1.1, z: 2.5 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out ); 
+			}
+			else if( intersections[ 0 ].object.name == 'research' ){ 	
+	    		if( infoGroup.children.length > 0 ){		
+					removeMembers();
+					removeInfoSection();
+	    		}
+				actualLab = 'research';
+				movement({ intensity: 2 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0.1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, screen1Light, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ x: -0.6, y: 1.1, z: 0.8 }, camera.position, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	if( controls ) movement({ x: -0.7, y: 1.1, z: 0.8 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out ); 
+			} 
+		}
+	}
+	//--------------- TRAVEL POINTS INTERSECT ------------------
+	if( checkstatus.travel ){
+	    raycasterTravel.setFromCamera( mouse, camera );
+	    var intersectTravel = raycasterTravel.intersectObjects( travelPoints.children );
+	    if ( intersectTravel.length > 0 ) {
+			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+			if( !checkstatus.mesas ) checkstatus.mesas = true;
+			if( intersectedTravel.name == 'makerPoint' ) {	
+	    		if( infoGroup.children.length > 0 ){		
+					removeMembers();
+					removeInfoSection();
+	    		}
+				if( controls ) movement({ x: intersectedTravel.position.x - 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+				movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, screen1Light, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
+			}
+			if( intersectedTravel.name == 'labsPoint' ) {	
+	    		if( infoGroup.children.length > 0 ){		
+					removeMembers();
+					removeInfoSection();
+	    		}
+				if( controls ) movement({ x: intersectedTravel.position.x - 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+				movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, screen1Light, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
+			}
+			if( intersectedTravel.name == 'tvPoint' ) { 	
+	    		if( infoGroup.children.length > 0 ){		
+					removeMembers();
+					removeInfoSection();
+	    		}
+				if( controls ) movement({ x: intersectedTravel.position.x + 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+				movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	movement({ intensity: 0.1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    	setTimeout(function(){ movement({ intensity: 10 }, screen1Light, 0, 2000, TWEEN.Easing.Quartic.Out );movement({ intensity: 10 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out ); }, 2000); 
+			}
+		}
+	}
+	//-----------------------------------------------------------------------
+	//-----------------------INFO GROUP ----------------------------------
+	if( checkstatus.infoCard ){
+		raycasterInfo.setFromCamera( mouse, camera );
+		var intersectInfo = raycasterTravel.intersectObjects( infoGroup.children );
+		if ( intersectInfo.length > 0 ) {
+			if( infoGroup.position.y < 0.7 ) openInfo();
+			//else hideInfo();
+		}
+	}
+
+	//------------------------------------------------------------------------
+	//---------------------- MEMBERS GROUP --------------------------------------
+	if( checkstatus.members ){
+		raycasterMembers.setFromCamera( mouse, camera );
+		var intersectMembers = raycasterTravel.intersectObjects( membersGroup.children );
+		if ( intersectMembers.length > 0 ) {
+	    		if( intersectMembers[ 0 ].object.name == 'sergio' ) addInfoSection( sergioInfoImages,'sergioInfo', 300 );
+		}
+	}
+
+	//------------------------------------------------------------------------
+	//---------------------- EXIT --------------------------------------------
+
+	raycasterExit.setFromCamera( mouse, camera );
+	var intersectExit = raycasterExit.intersectObjects( exitGroup.children );
+	if ( intersectExit.length > 0 ) {
+			hideInfo();
+	}
+
+	//------------------------------------------------------------------------	
 }
 
 function onWindowResize() {
@@ -592,12 +1035,14 @@ function onWindowResize() {
 }
 
 function animate() {
+	setTimeout( function() {
+        requestAnimationFrame( animate );
+        
+    }, 1000 / 30 );
 
-	requestAnimationFrame( animate );
+    render();
 
     TWEEN.update();
-
-	render();
 
 	if(controls) controls.update( clock.getDelta() );
 	if(controlsdevice) { 
@@ -619,112 +1064,251 @@ function render(){
 
 	if( videoTexture2 != undefined ) videoTexture2.update();
 
+	if( travelPoints.children[0] ) travelPoints.children[0].rotation.y += 0.01;
+	if( travelPoints.children[1] ) travelPoints.children[1].rotation.y += 0.01;
+	if( travelPoints.children[2] ) travelPoints.children[2].rotation.y += 0.01;
+
 	//------------ MESAS INTERSECT -----------------------------
-
-    raycasterMesas.setFromCamera( mouse, camera );
-	var intersections = raycasterMesas.intersectObjects( interactivos.children );
-
-	if ( intersections.length > 0 ) {
-		if( loadcrosshair != undefined && loadcrosshair.scale.x > -0.05) loadcrosshair.scale.set( loadcrosshair.scale.x - 0.01, loadcrosshair.scale.y - 0.01, loadcrosshair.scale.z - 0.01 );
-		if ( intersected != intersections[ 0 ].object ) {
-			intersected = intersections[ 0 ].object;
-			if( intersected.name == 'centro' ){ 
-				addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
-				moveLetters3d( letrasRadical, activeLetters );
-				if( particleCube != undefined ) particlesDisperse( radicalTextNParticles, 'radical');
-				if( letrasRadical.children.length > 0 ){
-	        		setTimeout( function(){ activeLetters = letrasRadical; }, 100 );  
+	if( isMobile ){
+		if( checkstatus.mesas ){
+		    raycasterMesas.setFromCamera( mouse, camera );
+			var intersections = raycasterMesas.intersectObjects( interactivos.children );
+			if ( intersections.length > 0 ) {
+				if( !loadcrosshair.visible ) loadcrosshair.visible = true;
+				if(infoGroup.children[0])console.log( intersections[ 0 ].object.name, infoGroup.children[0].name );
+				if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
+			    if( loadcrosshair.scale.x == 0.3 && intersections[ 0 ].object.name == 'centro') {
+		    		if( infoGroup.children.length > 0 ){		
+						removeMembers();
+						removeInfoSection();
+		    		}
+	    			movement({ intensity: 2.5 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
+	    			movement({ intensity: 0.1 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
+	    			movement({ r: 1, g: 0.8, b: 0.4 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
+	    			movement({ x: -2.5, y: 0.8, z: -2 }, radicallight.position, 0, 2000, TWEEN.Easing.Quartic.Out );
+	    			movement({ x: -0.6, y: 1.1, z: -2 }, camera.position, 0, 2000, TWEEN.Easing.Quartic.Out );
+			    	addMembers(radicalMembers);
+			    	addInfoSection( radicalInfoImages,'radicalInfo', 4000);
+			    	if( controls ) movement({ x: -2, y: 1.1, z: -2 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out );
+			    };
+			     if( loadcrosshair.scale.x ==  0.3 && intersections[ 0 ].object.name == 'research') { 
+		    		if( infoGroup.children.length > 0 ){		
+						removeMembers();
+						removeInfoSection();
+		    		}
+	    			movement({ intensity: 2.5 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
+	    			movement({ intensity: 0.1 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
+	    			movement({ r: 1, g: 0.7, b: 0.7 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
+	    			movement({ x: -2.5, y: 0.8, z: 0.5 }, radicallight.position, 0, 2000, TWEEN.Easing.Quartic.Out );
+			    	movement({ x: -0.6, y: 1.1, z: 0.8 }, camera.position, 0, 2000, TWEEN.Easing.Quartic.Out );
+			    	if( controls ) movement({ x: -2, y: 1.1, z: 0.8 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out ); 
+			    };
+			     if( loadcrosshair.scale.x == 0.3 && intersections[ 0 ].object.name == 'design') { 
+		    		if( infoGroup.children.length > 0 ){		
+						removeMembers();
+						removeInfoSection();
+		    		}
+	    			movement({ intensity: 2.5 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
+	    			movement({ intensity: 0.1 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
+	    			movement({ r: 0.7, g: 0.7, b: 1 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
+	    			movement({ x: -2.5, y: 0.8, z: 2.5 }, radicallight.position, 0, 2000, TWEEN.Easing.Quartic.Out );
+			    	movement({ x: -0.6, y: 1.1, z: 2.5 }, camera.position, 0, 2000, TWEEN.Easing.Quartic.Out );
+			    	if( controls ) movement({ x: -2, y: 1.1, z: 2.5 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out ); 
+			    };
+				if ( intersected != intersections[ 0 ].object ) {
+					intersected = intersections[ 0 ].object;
+					if( intersected.name == 'centro' ){ 
+						if( !membersAdded ) {
+							addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
+							moveLetters3d( letrasRadical, activeLetters );
+						}
+						if( particleCube != undefined ) particlesDisperse( radicalTextNParticles, 'radical');
+						if( letrasRadical.children.length > 0 ){
+			        		setTimeout( function(){ activeLetters = letrasRadical; }, 100 );  
+						}
+					}
+					else if( intersected.name == 'design' ){
+						addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
+						moveLetters3d(letrasDesign, activeLetters);
+						if( particleCube != undefined ) console.log(intersections[ 0 ].object.name); 
+						if( letrasDesign.children.length > 0 ){
+			        		setTimeout( function(){ activeLetters = letrasDesign; }, 100 );  
+						}
+					}
+					else if( intersected.name == 'research' ){ 
+						addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
+						moveLetters3d( letrasResearch, activeLetters );
+						if( particleCube != undefined ) particlesDisperse( researchTextNParticles, 'research');
+						if( letrasResearch.children.length > 0 ){
+			        		setTimeout( function(){ activeLetters = letrasResearch; }, 100 );  
+						}
+					} 
 				}
-				document.body.style.cursor = 'pointer';
 			}
-			else if( intersected.name == 'design' ){
-				addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
-				moveLetters3d(letrasDesign, activeLetters);
-				if( particleCube != undefined ) console.log(intersections[ 0 ].object.name); 
-				if( letrasDesign.children.length > 0 ){
-	        		setTimeout( function(){ activeLetters = letrasDesign; }, 100 );  
+			else if ( intersected ) {
+				if( loadcrosshair.visible ) loadcrosshair.visible = false;
+				moveLetters3d( undefined, activeLetters );
+				removeSpriteLetters();
+				if( particleCube != undefined ) particlesDisperse( 2000, 'disperse');
+				if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
+				intersected = null; 
+			}	
+		}
+	   //-------- SCREENS INTERSECT -----------	
+	   if( checkstatus.screens ){  		
+		   raycasterScreens.setFromCamera( mouse, camera );
+		   var intersectsScreen = raycasterScreens.intersectObjects( screensGroup.children );
+		   if ( intersectsScreen.length > 0 ) {
+				if( !loadcrosshair.visible ) loadcrosshair.visible = true;
+		   		intersectedScreens = intersectsScreen[0].object;
+				if( loadcrosshair != undefined && loadcrosshair.scale.x > 0 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
+				if ( intersectedScreens != intersectsScreen[ 0 ].object ) {
+					intersectedScreens = intersectsScreen[ 0 ].object;
+					if(intersectedScreens.name == 'screen1'){
+						addSpritesLetters(['p','l', 'a', 'y', 'blanck', 'v', 'i', 'd', 'e', 'o', 'blanck', 'a']);
+						movement({ intensity: 2.5 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ intensity: 0 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ r: 1, g: 1, b: 1 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    			movement({ x: -0.3, y: 1.2, z: 0.74 }, radicallight.position, 0, 2000, TWEEN.Easing.Quartic.Out );	
+					} 
+					else if(intersectedScreens.name == 'screen2'){
+						addSpritesLetters(['p','l', 'a', 'y', 'blanck', 'v', 'i', 'd', 'e', 'o', 'blanck', 'b']);
+						movement({ intensity: 2.5 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ intensity: 0 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ r: 1, g: 1, b: 1 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    			movement({ x: -0.3, y: 1.2, z: 4.15 }, radicallight.position, 0, 2000, TWEEN.Easing.Quartic.Out );	
+					} 
 				}
-				document.body.style.cursor = 'pointer';
 			}
-			else if( intersected.name == 'research' ){ 
-				addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
-				moveLetters3d( letrasResearch, activeLetters );
-				if( particleCube != undefined ) particlesDisperse( researchTextNParticles, 'research');
-				if( letrasResearch.children.length > 0 ){
-	        		setTimeout( function(){ activeLetters = letrasResearch; }, 100 );  
+			else if ( intersectedScreens ) {
+				if( loadcrosshair.visible ) loadcrosshair.visible = false;
+				intersectedScreens = null;
+				removeSpriteLetters();
+				if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
+			}
+	   }
+
+		//--------------- TRAVEL POINTS INTERSECT ------------------
+		if( checkstatus.travel ){
+		    raycasterTravel.setFromCamera( mouse, camera );
+		    var intersectTravel = raycasterTravel.intersectObjects( travelPoints.children );
+		    if ( intersectTravel.length > 0 ) {
+				if( !loadcrosshair.visible ) loadcrosshair.visible = true;
+				if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
+		    	if( loadcrosshair.scale.x == 0.3 ) { 	
+		    		if( infoGroup.children.length > 0 ){		
+						removeMembers();
+						removeInfoSection();
+		    		}
+		    		if( controls ) controls.target.set( intersectedTravel.position.x + 0.1, 1.1, intersectedTravel.position.z );
+		    		checkstatus.mesas = true;
+		    		if( intersectedTravel.name == 'makerPoint' ){
+		    			movement({ r: 0.9, g: 0.9, b: 0.9 }, radicallight.color, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ x: 0, y: 0, z: 0 }, radicallight.position, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    			movement({ intensity: 1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+		    		}
+		    		if( intersectedTravel.name == 'labsPoint' ) {
+		    			movement({ r: 0.9, g: 0.9, b: 0.9 }, radicallight.color, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ x: 0, y: 0, z: 0 }, radicallight.position, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    			movement({ intensity: 1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+		    		}
+		    		if( intersectedTravel.name == 'tvPoint' ) { 
+		    			movement({ intensity: 4 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ intensity: 0.1 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ r: 0.9, g: 0.9, b: 0.9 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    			movement({ x: -0.8, y: 1.2, z: 2.445 }, radicallight.position, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    			movement({ x: intersectedTravel.position.x - 0.3, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+		    		}
+		    	};
+				if ( intersectedTravel != intersectTravel[ 0 ].object ) {
+					intersectedTravel = intersectTravel[ 0 ].object;
+		    		if( intersectedTravel.name == 'makerPoint' ) { addSpritesLetters(['m','a', 'k', 'e', 'r', 'blanck', 's', 'p', 'a', 'c', 'e']); }
+		    		if( intersectedTravel.name == 'labsPoint' ) { addSpritesLetters(['blanck','blanck','blanck','blanck','l','a', 'b', 's']); }
+		    		if( intersectedTravel.name == 'tvPoint' ) { addSpritesLetters(['blanck','blanck','v','i', 'd', 'e','o', 's']);}
 				}
-				document.body.style.cursor = 'pointer';
-			} 
+			}
+			else if ( intersectedTravel ) {
+				if( loadcrosshair.visible ) loadcrosshair.visible = false;
+				intersectedTravel = null;
+				removeSpriteLetters();
+				if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
+			}
 		}
-	}
-	else if ( intersected ) {
-		moveLetters3d( undefined, activeLetters );
-		removeSpriteLetters();
-		console.log('es null : ',intersected.name); 
-		if( particleCube != undefined ) particlesDisperse( 2000, 'disperse');
-		if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
-		//video.play();
-		intersected = null; 
-		document.body.style.cursor = 'auto';
-	}
-   //-------- SCREENS INTERSECT -----------	
 
-   raycasterScreens.setFromCamera( mouse, camera );
-   var intersectsScreen = raycasterScreens.intersectObjects( screensGroup.children );
-   if ( intersectsScreen.length > 0 ) {
-   		if( loadcrosshair != undefined && loadcrosshair.scale.x > -0.05) loadcrosshair.scale.set( loadcrosshair.scale.x - 0.01, loadcrosshair.scale.y - 0.01, loadcrosshair.scale.z - 0.01 )
-		if ( intersectedScreens != intersectsScreen[ 0 ].object ) {
-			addSpritesLetters(['p','l', 'a', 'y', 'blanck', 'v', 'i', 'd', 'e', 'o']);
-			intersectedScreens = intersectsScreen[ 0 ].object;
-			//if( intersectedScreens.name == "screen1" ) clickOnELement(intersectedScreens);
-			console.log('inters ', intersectedScreens);
-			//if( video != undefined ) video.play();
+		//-----------------------------------------------------------------------
+		//-----------------------INFO GROUP ----------------------------------
+		if( checkstatus.infoCard ){
+			raycasterInfo.setFromCamera( mouse, camera );
+			var intersectInfo = raycasterTravel.intersectObjects( infoGroup.children );
+			if ( intersectInfo.length > 0 ) {
+				if( !loadcrosshair.visible ) loadcrosshair.visible = true;
+				if( loadcrosshair != undefined ){
+					if( infoGroup.position.y < 0.7 ){ loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 ); }	
+				}	
+				if( loadcrosshair.scale.x == 0.3 ) { openInfo(); }
+				if( intersectInfo[0].object != intersectedInfo ) {
+					if( infoGroup.position.y < 0.7 ) addSpritesLetters(['r', 'e', 'a', 'd', 'blanck','i', 'n', 'f', 'o']);
+					intersectedInfo = intersectInfo[0].object;
+				}	
+			}
+			else if ( intersectedInfo ) {
+				if( loadcrosshair.visible ) loadcrosshair.visible = false;
+				if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
+				removeSpriteLetters();
+				intersectedInfo = null;
+			}
 		}
-		document.body.style.cursor = 'pointer';
-	}
-	else if ( intersectedScreens ) {
-		intersectedScreens = null;
-		removeSpriteLetters();
-		if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
-		document.body.style.cursor = 'auto';
-	}
 
-	//--------------- TRAVEL POINTS INTERSECT ------------------
-
-    raycasterTravel.setFromCamera( mouse, camera );
-    var intersectTravel = raycasterTravel.intersectObjects( travelPoints.children );
-    if ( intersectTravel.length > 0 ) {
-    	if( loadcrosshair != undefined && loadcrosshair.scale.x > -0.05) loadcrosshair.scale.set( loadcrosshair.scale.x - 0.01, loadcrosshair.scale.y - 0.01, loadcrosshair.scale.z - 0.01 )
-    	//console.log('travel Counter: ', loadcrosshair.scale.x);
-    	if( loadcrosshair.scale.x < 0 ) { movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out ); };
-		if ( intersectedTravel != intersectTravel[ 0 ].object ) {
-			intersectedTravel = intersectTravel[ 0 ].object;
-    		if( intersectedTravel.name == 'makerPoint' ) addSpritesLetters(['m','a', 'k', 'e', 'r', 'blanck', 's', 'p', 'a', 'c', 'e']);
-    		if( intersectedTravel.name == 'labsPoint' ) addSpritesLetters(['blanck','blanck','blanck','blanck','l','a', 'b', 's']);
-    		if( intersectedTravel.name == 'tvPoint' ) addSpritesLetters(['blanck','blanck','v','i', 'd', 'e','o', 's']);
-			console.log(intersectedTravel);
+		//------------------------------------------------------------------------
+		//---------------------- MEMBERS GROUP --------------------------------------
+		if( checkstatus.members ){
+			raycasterMembers.setFromCamera( mouse, camera );
+			var intersectMembers = raycasterTravel.intersectObjects( membersGroup.children );
+			if ( intersectMembers.length > 0 ) {
+				if( !loadcrosshair.visible ) loadcrosshair.visible = true;
+				if( intersectedMembers != intersectMembers[0].object ) { 
+					addSpritesLetters(['p', 'r', 'o', 'f', 'i' , 'l', 'e', 'blanck','i', 'n', 'f', 'o']);
+					intersectedMembers = intersectMembers[0].object;
+				}	
+				if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
+				if( loadcrosshair.scale.x == 0.3 ) { 
+		    		if( intersectMembers[ 0 ].object.name == 'sergio' ) addInfoSection( sergioInfoImages, 'sergioInfo', 300 );
+		    	};
+			}
+			else if ( intersectedMembers ) {
+				if( loadcrosshair.visible ) loadcrosshair.visible = false;
+				if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
+				removeSpriteLetters();
+				intersectedMembers = null;
+			}
 		}
-		document.body.style.cursor = 'pointer';
-	}
-	else if ( intersectedTravel ) {
-		intersectedTravel = null;
-		removeSpriteLetters();
-		if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
-		document.body.style.cursor = 'auto';
-	}
+		//------------------------------------------------------------------------
+		//---------------------- EXIT --------------------------------------------
 
-	//-----------------------------------------------------------------------		
-
-	/*if(cylinder != undefined ){
-		for( var a = 0; a < numVertices; a+=3 ){
-			var number =  Math.random()+1;
-			cylinder.geometry.vertices[ a ].multiplyScalar( number );
-			cylinder.geometry.vertices[ a+1 ].multiplyScalar( number );
-			cylinder.geometry.vertices[ a+2 ].multiplyScalar( number );
-			//cylinder.geometry.vertices[ THREE.Math.randInt( 0, cylinder.geometry.vertices.length ) ].multiplyScalar( 1.01 );
-			cylinder.geometry.verticesNeedUpdate = true; // important
+		raycasterExit.setFromCamera( mouse, camera );
+		var intersectExit = raycasterExit.intersectObjects( exitGroup.children );
+		if ( intersectExit.length > 0 ) {
+			exitIcon.material.color.setHex( 0x00ff00 );
+			if( intersectedExit != intersectExit[0].object ) intersectedExit = intersectExit[0].object;
+			if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ){
+				loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
+			}	
+			if( loadcrosshair.scale.x == 0.5 ) { 
+				hideInfo();
+	    	};
 		}
-	}*/
+		else if ( intersectedExit ) {
+			if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
+			exitIcon.material.color.setHex( 0xffdd44 );
+			//removeSpriteLetters();
+			intersectedExit = null;
+		}
+		//------------------------------------------------------------------------	
+	}
 }
 
 function movement(value, object, delay, duration, easingType){
