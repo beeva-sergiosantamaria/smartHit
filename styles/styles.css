@@ -435,3 +435,16 @@ input[type="submit"] {
 input[type="submit"]:hover {
   opacity: 1;
 }
+
+.allowVideo{
+  width: 50%;
+  height: 50%;
+  background-color: black;
+  color: white;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+}

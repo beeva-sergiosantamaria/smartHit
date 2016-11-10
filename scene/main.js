@@ -1,14 +1,14 @@
 
 var camera, crosshair, loadcrosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, intersectedScreens, intersectedTravel, intersectedInfo, intersectedMembers, intersectedExit, sky, plane, particleCube, radicalText,
- radicalTextNParticles, researchText, researchTextNParticles, interval, radicallight, researchlight, designlight, screen1Light, screen2Light, actualLab, exitIcon,
+ radicalTextNParticles, researchText, researchTextNParticles, interval, radicallight, researchlight, designlight, screen1Light, screen2Light, actualLab, exitIcon, arrowIconGeometry,
 	width = window.innerWidth, 
 	height = window.innerHeight;
 
 var isMobile = false;
 
-var videoMP4, videoOgg, video, videoTexture, video2, videoTexture2;	
+var videoMP4, videoOgg, video, videoTexture, video2, videoTexture2, screen1Mesh, screen2Mesh;	
 
-var centro, design, research, clever, sillas, comunicacion, pared, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, teles, pantalla1, pantalla2, pantalla3, pantalla4;
+var centro, design, research, clever, maker, sillas, comunicacion, pared, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, teles, pantalla1, pantalla2, pantalla3, pantalla4;
 
 var tweenCircleIn, tweenCircleOut, tweenRadicalIn, tweenResearchIn, tweenDesignIn, tweenLettersIn;
 
@@ -23,7 +23,6 @@ var raycasterExit = new THREE.Raycaster();
 
 var manager = new THREE.LoadingManager();
 
-
 var radicalMembers = [
 	{ name: 'david', position: { x: -2, y: 0.8, z: -1.1 }  },
 	{ name: 'marian', position: { x: -2.9, y: 0.8, z: -1.2 }  },
@@ -37,7 +36,7 @@ var checkstatus = {
 	infoCard: true,
 	members: true,
 	travel: true,
-	screens: true
+	screens: false
 }
 
 var radicalInfoImages = ['radicalInfo1','radicalInfo2','radicalInfo3'];
@@ -137,7 +136,7 @@ function initRender() {
 	camera = new THREE.PerspectiveCamera( 60, (width/height), 0.01, 10000000 );
 	//camera.position.set( 0, 1.4, 0 );
 	//camera.viewport = { x: 0, y: 0, width: width, height: height }
-	camera.position.set( -0.3, 1.1, -1.5 );
+	camera.position.set( -0.8, 1.1, -0.8 );
 
 	scene.add(camera);
 
@@ -153,7 +152,7 @@ function initRender() {
 		crosshair = new THREE.Mesh(
 			new THREE.RingGeometry( 0.000001, 0.009, 32 ),
 			new THREE.MeshBasicMaterial( {
-				color: 0x666600,
+				color: 0xddbb22,
 			} )
 		);
 		crosshair.position.z = - 1.5;
@@ -223,6 +222,13 @@ function initRender() {
 	window.addEventListener( 'resize', onWindowResize, false );
 	if( !isMobile ) { document.addEventListener( 'mousemove', onDocumentMouseMove, false ); };
 	if( !isMobile ) { document.addEventListener( 'mousedown', onDocumentMouseDown, false ); };
+	$(document).on({ 'touchstart' : function(){ 
+		console.log('detecta touch');
+		video.play();
+		video2.play();
+		video.pause();
+		video2.pause();
+	} });
 }
 
 function buildShape(){
@@ -338,83 +344,89 @@ function addModel(){
 
 				console.log(elements);
 
-				techo = elements.children[12];
+				techo = elements.children[13];
 				techo.renderOrder = 0;
 				techo.name = "techo";
 
 				planta.add(techo);
 
-				banco = elements.children[11];
+				banco = elements.children[12];
 				banco.renderOrder = 0;
 				banco.name = "banco";
 
 				planta.add(banco);
 
-				cristaleraEntrada = elements.children[10];
+				cristaleraEntrada = elements.children[11];
 				cristaleraEntrada.renderOrder = 1;
 				cristaleraEntrada.name = "cristaleraEntrada";
 
 				planta.add(cristaleraEntrada);
 
-				pared = elements.children[9];
+				pared = elements.children[10];
 				pared.renderOrder = 0;
 				pared.name = "pared";
 
 				planta.add(pared);
 
-				cristaleraAgora = elements.children[8];
+				cristaleraAgora = elements.children[9];
 				cristaleraAgora.renderOrder = 1;
 				cristaleraAgora.name = "cristaleraAgora";
 
 				planta.add(cristaleraAgora);
 
-				centro = elements.children[7];
+				centro = elements.children[8];
 				centro.renderOrder = 0;
 				centro.name = "centro";
 
 				interactivos.add(centro);
 
-				research = elements.children[6];
+				research = elements.children[7];
 				research.renderOrder = 0;
 				research.name = "research";
 
 				interactivos.add(research);
 
-				design = elements.children[5];
+				design = elements.children[6];
 				design.renderOrder = 0;
 				design.name = "design";
 
 				interactivos.add(design);
 
-				comunicacion = elements.children[4];
+				comunicacion = elements.children[5];
 				comunicacion.renderOrder = 0;
 				comunicacion.name = "comunicacion";
 
 				interactivos.add(comunicacion);
 
-				clever = elements.children[3];
+				clever = elements.children[4];
 				clever.renderOrder = 0;
 				clever.name = "clever";
 
 				interactivos.add(clever);
 
-				cristaleraFrontal = elements.children[2];
+				cristaleraFrontal = elements.children[3];
 				cristaleraFrontal.renderOrder = 2;
 				cristaleraFrontal.name = "cristaleraFrontal";
 
 				planta.add(cristaleraFrontal);
 
-				sillas = elements.children[1];
+				sillas = elements.children[2];
 				sillas.renderOrder = 0;
 				sillas.name = "sillas";
 
 				planta.add(sillas);
 
-				teles = elements.children[0];
+				teles = elements.children[1];
 				teles.renderOrder = 0;
 				teles.name = "teles";
 
 				planta.add(teles);
+
+				maker = elements.children[0];
+				maker.renderOrder = 0;
+				maker.name = "maker";
+
+				interactivos.add(maker);
 
 				scene.add(planta);
 				scene.add(interactivos);
@@ -442,7 +454,6 @@ function addExitIcon(position){
 }
 
 function addLetters3D(lettersArray, position, object){
-
 	var loader = new THREE.FontLoader();
 	loader.load( 'scene/fonts/droid_sans_bold.typeface.js', function ( font ) {
 		for( var a= 0; a < lettersArray.length; a++ ){
@@ -466,7 +477,6 @@ function addLetters3D(lettersArray, position, object){
 			object.add(radicalTextMesh);	
 		}
 	});
-
 	object.position.set( position.x, position.y, position.z );
 	object.lookAt( camera.position );
 	object.name = 'letras3D';
@@ -474,7 +484,6 @@ function addLetters3D(lettersArray, position, object){
 }
 
 function addParticleSystem(){
-
 	var loader = new THREE.FontLoader();
 	loader.load( 'scene/fonts/droid_sans_bold.typeface.js', function ( font ) {
 		radicalText = new THREE.TextGeometry( 'Radical', {
@@ -495,7 +504,6 @@ function addParticleSystem(){
         radicalTextNParticles = radicalText.vertices.length;
         researchTextNParticles = researchText.vertices.length;
 	});
-
    	var boxGeometry = new THREE.Geometry();
    	for (var p = 0; p < numeroParticulas; p++) {
 	  var pX = Math.random() * (max - min + 1) + min,
@@ -573,14 +581,14 @@ function addScreens(){
 
 	var screen1Geometry = new THREE.PlaneGeometry( 0.4, 0.25, 1, 1 );
 	var screen1Material = new THREE.MeshBasicMaterial({ map	: videoTexture.texture, overdraw: true, side: THREE.DoubleSide });
-	var screen1Mesh = new THREE.Mesh( screen1Geometry, screen1Material );
+	screen1Mesh = new THREE.Mesh( screen1Geometry, screen1Material );
 	screen1Mesh.position.set( -0.225 , 1.13 , 0.74 );
 	screen1Mesh.rotateY( -Math.PI/2 );
 	screen1Mesh.name = 'screen1';
 
 	var screen2Geometry = new THREE.PlaneGeometry( 0.4, 0.25, 1, 1 );
 	var screen2Material = new THREE.MeshBasicMaterial({ map	: videoTexture2.texture, overdraw: true, side: THREE.DoubleSide });
-	var screen2mesh = new THREE.Mesh( screen2Geometry, screen2Material );
+	screen2mesh = new THREE.Mesh( screen2Geometry, screen2Material );
 	screen2mesh.position.set( -0.225 , 1.13 , 4.15 );
 	screen2mesh.rotateY( -Math.PI/2 );
 	screen2mesh.name = 'screen2';
@@ -589,22 +597,28 @@ function addScreens(){
 	screensGroup.add( screen2mesh );
 
 	scene.add(screensGroup);
+	$("#allowVideo").css('display','block');
 }
 
 function addTravelPoints(){
-
-	var locationPoints = [{ x: -0.7, y: 1.3, z: -5.5 }, { x: -2, y: 1.3, z: 2.5 }, { x: -0.3, y: 1.3, z: -1.5 }];
+	var locationPoints = [{ x: -0.7, y: 1.4, z: -5.5 }, { x: -2, y: 1.4, z: 2.5 }, { x: -0.8, y: 1.4, z: -0.5 }];
 	var namePoints = ['makerPoint', 'tvPoint', 'labsPoint'];
+	var objLoader = new THREE.OBJLoader();
+		objLoader.setPath( 'models/' );	
+		objLoader.load( 'arrow.obj', function ( elements ) {
+		console.log('icono exit: ', elements);
+		arrowIconGeometry = elements.children[0].geometry;
 
-	for ( var a = 0; a < locationPoints.length; a++ ){
-		var geometry = new THREE.TetrahedronGeometry( 0.2, 0 );
-		var material = new THREE.MeshBasicMaterial( {color: 0xffdd44} );
-		var cube = new THREE.Mesh( geometry, material );
-		cube.position.set( locationPoints[a].x , locationPoints[a].y, locationPoints[a].z );
-		cube.name = namePoints[a];
-		travelPoints.add( cube );
-		scene.add( travelPoints );
-	}
+		for ( var a = 0; a < locationPoints.length; a++ ){
+			var geometry = arrowIconGeometry;
+			var material = new THREE.MeshBasicMaterial( {color: 0xffdd44} );
+			var cube = new THREE.Mesh( geometry, material );
+			cube.position.set( locationPoints[a].x , locationPoints[a].y, locationPoints[a].z );
+			cube.name = namePoints[a];
+			travelPoints.add( cube );
+			scene.add( travelPoints );
+		}
+	});
 }
 
 function addMembers(members) {
@@ -904,6 +918,7 @@ function onDocumentMouseDown( e ) {
 					removeInfoSection();
 	    		}
 				actualLab = 'centro';
+	    		checkstatus.screens = false;
 				movement({ intensity: 2 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ intensity: 0 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
@@ -952,14 +967,18 @@ function onDocumentMouseDown( e ) {
 	    raycasterTravel.setFromCamera( mouse, camera );
 	    var intersectTravel = raycasterTravel.intersectObjects( travelPoints.children );
 	    if ( intersectTravel.length > 0 ) {
-			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );  
+		    movement({ x: intersectedTravel.position.x-2, y: 1.1, z: intersectedTravel.position.z }, camera.position, 3500, 1000, TWEEN.Easing.Quartic.Out ); 
 			if( !checkstatus.mesas ) checkstatus.mesas = true;
 			if( intersectedTravel.name == 'makerPoint' ) {	
 	    		if( infoGroup.children.length > 0 ){		
 					removeMembers();
 					removeInfoSection();
 	    		}
-				if( controls ) movement({ x: intersectedTravel.position.x - 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+	    		checkstatus.screens = false;
+				if( controls ) {
+					movement({ x: intersectedTravel.position.x - 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+				}
 				movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ intensity: 0 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
@@ -972,6 +991,7 @@ function onDocumentMouseDown( e ) {
 					removeMembers();
 					removeInfoSection();
 	    		}
+	    		checkstatus.screens = false;
 				if( controls ) movement({ x: intersectedTravel.position.x - 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
 				movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
@@ -985,6 +1005,7 @@ function onDocumentMouseDown( e ) {
 					removeMembers();
 					removeInfoSection();
 	    		}
+	    		checkstatus.screens = true;
 				if( controls ) movement({ x: intersectedTravel.position.x + 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
 				movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
@@ -1074,14 +1095,20 @@ function render(){
 		    raycasterMesas.setFromCamera( mouse, camera );
 			var intersections = raycasterMesas.intersectObjects( interactivos.children );
 			if ( intersections.length > 0 ) {
-				if( !loadcrosshair.visible ) loadcrosshair.visible = true;
-				if(infoGroup.children[0])console.log( intersections[ 0 ].object.name, infoGroup.children[0].name );
-				if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
-			    if( loadcrosshair.scale.x == 0.3 && intersections[ 0 ].object.name == 'centro') {
+				if( intersections[ 0 ].object.name == 'centro') {
+					if( !loadcrosshair.visible ) loadcrosshair.visible = true;
+					if(infoGroup.children[0])console.log( intersections[ 0 ].object.name, infoGroup.children[0].name );
+					if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
+				}
+			    if( loadcrosshair.scale.x == 0.5 && intersections[ 0 ].object.name == 'centro') {
+		    		video.pause();
+					video2.pause(); 	
+			    	removeSpriteLetters();
 		    		if( infoGroup.children.length > 0 ){		
 						removeMembers();
 						removeInfoSection();
 		    		}
+		    		checkStatus.screens = false;
 	    			movement({ intensity: 2.5 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
 	    			movement({ intensity: 0.1 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
 	    			movement({ r: 1, g: 0.8, b: 0.4 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
@@ -1091,7 +1118,7 @@ function render(){
 			    	addInfoSection( radicalInfoImages,'radicalInfo', 4000);
 			    	if( controls ) movement({ x: -2, y: 1.1, z: -2 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out );
 			    };
-			     if( loadcrosshair.scale.x ==  0.3 && intersections[ 0 ].object.name == 'research') { 
+			     /*if( loadcrosshair.scale.x ==  0.3 && intersections[ 0 ].object.name == 'research') { 
 		    		if( infoGroup.children.length > 0 ){		
 						removeMembers();
 						removeInfoSection();
@@ -1114,12 +1141,12 @@ function render(){
 	    			movement({ x: -2.5, y: 0.8, z: 2.5 }, radicallight.position, 0, 2000, TWEEN.Easing.Quartic.Out );
 			    	movement({ x: -0.6, y: 1.1, z: 2.5 }, camera.position, 0, 2000, TWEEN.Easing.Quartic.Out );
 			    	if( controls ) movement({ x: -2, y: 1.1, z: 2.5 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out ); 
-			    };
+			    };*/
 				if ( intersected != intersections[ 0 ].object ) {
 					intersected = intersections[ 0 ].object;
 					if( intersected.name == 'centro' ){ 
 						if( !membersAdded ) {
-							addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
+							addSpritesLetters(['i','r','blanck','a','blanck','r','a', 'd', 'i', 'c','a','l']);
 							moveLetters3d( letrasRadical, activeLetters );
 						}
 						if( particleCube != undefined ) particlesDisperse( radicalTextNParticles, 'radical');
@@ -1127,7 +1154,7 @@ function render(){
 			        		setTimeout( function(){ activeLetters = letrasRadical; }, 100 );  
 						}
 					}
-					else if( intersected.name == 'design' ){
+					/*else if( intersected.name == 'design' ){
 						addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
 						moveLetters3d(letrasDesign, activeLetters);
 						if( particleCube != undefined ) console.log(intersections[ 0 ].object.name); 
@@ -1142,7 +1169,7 @@ function render(){
 						if( letrasResearch.children.length > 0 ){
 			        		setTimeout( function(){ activeLetters = letrasResearch; }, 100 );  
 						}
-					} 
+					} */
 				}
 			}
 			else if ( intersected ) {
@@ -1160,21 +1187,32 @@ function render(){
 		   var intersectsScreen = raycasterScreens.intersectObjects( screensGroup.children );
 		   if ( intersectsScreen.length > 0 ) {
 				if( !loadcrosshair.visible ) loadcrosshair.visible = true;
-		   		intersectedScreens = intersectsScreen[0].object;
 				if( loadcrosshair != undefined && loadcrosshair.scale.x > 0 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
+				if(  loadcrosshair.scale.x == 0.5  ){
+					if( intersectsScreen[ 0 ].object.name == 'screen1' ) {
+						video.play(); video2.pause();
+						movement({ x: -0.225-0.5, y: 1.1, z: 0.74 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
+					}
+					if( intersectsScreen[ 0 ].object.name == 'screen2' ) { 
+						video2.play(); 
+						video.pause(); 
+						movement({ x: -0.225-0.5, y: 1.1, z: 4.15 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
+					}
+				}
 				if ( intersectedScreens != intersectsScreen[ 0 ].object ) {
+					console.log( intersectsScreen[ 0 ].object.name );
 					intersectedScreens = intersectsScreen[ 0 ].object;
 					if(intersectedScreens.name == 'screen1'){
 						addSpritesLetters(['p','l', 'a', 'y', 'blanck', 'v', 'i', 'd', 'e', 'o', 'blanck', 'a']);
 						movement({ intensity: 2.5 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
-		    			movement({ intensity: 0 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ intensity: 0.1 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
 		    			movement({ r: 1, g: 1, b: 1 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
-		    			movement({ x: -0.3, y: 1.2, z: 0.74 }, radicallight.position, 0, 2000, TWEEN.Easing.Quartic.Out );	
+		    			movement({ x: -0.3, y: 1.2, z: 0.74 }, radicallight.position, 0, 2000, TWEEN.Easing.Quartic.Out );
 					} 
 					else if(intersectedScreens.name == 'screen2'){
 						addSpritesLetters(['p','l', 'a', 'y', 'blanck', 'v', 'i', 'd', 'e', 'o', 'blanck', 'b']);
 						movement({ intensity: 2.5 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
-		    			movement({ intensity: 0 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ intensity: 0.1 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
 		    			movement({ r: 1, g: 1, b: 1 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    			movement({ x: -0.3, y: 1.2, z: 4.15 }, radicallight.position, 0, 2000, TWEEN.Easing.Quartic.Out );	
 					} 
@@ -1195,7 +1233,9 @@ function render(){
 		    if ( intersectTravel.length > 0 ) {
 				if( !loadcrosshair.visible ) loadcrosshair.visible = true;
 				if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
-		    	if( loadcrosshair.scale.x == 0.3 ) { 	
+		    	if( loadcrosshair.scale.x == 0.5 ) {
+		    			video.pause();
+						video2.pause(); 	
 		    		if( infoGroup.children.length > 0 ){		
 						removeMembers();
 						removeInfoSection();
@@ -1203,13 +1243,18 @@ function render(){
 		    		if( controls ) controls.target.set( intersectedTravel.position.x + 0.1, 1.1, intersectedTravel.position.z );
 		    		checkstatus.mesas = true;
 		    		if( intersectedTravel.name == 'makerPoint' ){
+		    			checkstatus.screens = false;
+		    			checkstatus.mesas = true;
 		    			movement({ r: 0.9, g: 0.9, b: 0.9 }, radicallight.color, 0, 1000, TWEEN.Easing.Quartic.Out );
 		    			movement({ x: 0, y: 0, z: 0 }, radicallight.position, 0, 1000, TWEEN.Easing.Quartic.Out );
 		    			movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    			movement({ intensity: 1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+		    			movement({ x: intersectedTravel.position.x-2, y: 1.1, z: intersectedTravel.position.z }, camera.position, 3000, 1000, TWEEN.Easing.Quartic.Out ); 
 		    		}
 		    		if( intersectedTravel.name == 'labsPoint' ) {
+		    			checkstatus.screens = false;
+		    			checkstatus.mesas = true;
 		    			movement({ r: 0.9, g: 0.9, b: 0.9 }, radicallight.color, 0, 1000, TWEEN.Easing.Quartic.Out );
 		    			movement({ x: 0, y: 0, z: 0 }, radicallight.position, 0, 1000, TWEEN.Easing.Quartic.Out );
 		    			movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
@@ -1217,6 +1262,8 @@ function render(){
 		    			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out ); 
 		    		}
 		    		if( intersectedTravel.name == 'tvPoint' ) { 
+		    			checkstatus.screens = true;
+		    			checkstatus.mesas = false;
 		    			movement({ intensity: 4 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
 		    			movement({ intensity: 0.1 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
 		    			movement({ r: 0.9, g: 0.9, b: 0.9 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
@@ -1227,8 +1274,8 @@ function render(){
 				if ( intersectedTravel != intersectTravel[ 0 ].object ) {
 					intersectedTravel = intersectTravel[ 0 ].object;
 		    		if( intersectedTravel.name == 'makerPoint' ) { addSpritesLetters(['m','a', 'k', 'e', 'r', 'blanck', 's', 'p', 'a', 'c', 'e']); }
-		    		if( intersectedTravel.name == 'labsPoint' ) { addSpritesLetters(['blanck','blanck','blanck','blanck','l','a', 'b', 's']); }
-		    		if( intersectedTravel.name == 'tvPoint' ) { addSpritesLetters(['blanck','blanck','v','i', 'd', 'e','o', 's']);}
+		    		if( intersectedTravel.name == 'labsPoint' ) { addSpritesLetters(['i','r','blanck','a','blanck','l','a', 'b', 's']); }
+		    		if( intersectedTravel.name == 'tvPoint' ) { addSpritesLetters(['i','r','blanck','a','blanck','v','i', 'd', 'e','o', 's']);}
 				}
 			}
 			else if ( intersectedTravel ) {
@@ -1249,7 +1296,7 @@ function render(){
 				if( loadcrosshair != undefined ){
 					if( infoGroup.position.y < 0.7 ){ loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 ); }	
 				}	
-				if( loadcrosshair.scale.x == 0.3 ) { openInfo(); }
+				if( loadcrosshair.scale.x == 0.5 ) { openInfo(); }
 				if( intersectInfo[0].object != intersectedInfo ) {
 					if( infoGroup.position.y < 0.7 ) addSpritesLetters(['r', 'e', 'a', 'd', 'blanck','i', 'n', 'f', 'o']);
 					intersectedInfo = intersectInfo[0].object;
@@ -1268,10 +1315,10 @@ function render(){
 		if( checkstatus.members ){
 			raycasterMembers.setFromCamera( mouse, camera );
 			var intersectMembers = raycasterTravel.intersectObjects( membersGroup.children );
-			if ( intersectMembers.length > 0 ) {
+			if ( intersectMembers.length > 0 && intersectMembers[ 0 ].object.name == 'sergio' ) {
 				if( !loadcrosshair.visible ) loadcrosshair.visible = true;
 				if( intersectedMembers != intersectMembers[0].object ) { 
-					addSpritesLetters(['p', 'r', 'o', 'f', 'i' , 'l', 'e', 'blanck','i', 'n', 'f', 'o']);
+					addSpritesLetters(['e', 'n', 't','e','r', 'blanck','p', 'r', 'o', 'f', 'i' , 'l', 'e']);
 					intersectedMembers = intersectMembers[0].object;
 				}	
 				if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
