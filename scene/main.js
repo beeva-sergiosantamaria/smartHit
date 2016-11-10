@@ -135,8 +135,8 @@ function initRender() {
 
 	camera = new THREE.PerspectiveCamera( 60, (width/height), 0.01, 10000000 );
 	//camera.position.set( 0, 1.4, 0 );
-	//camera.viewport = { x: 0, y: 0, width: width, height: height }
-	camera.position.set( -0.8, 1.1, -0.8 );
+	//camera.viewport = { x: 0, y: 0, width: width, height: height }-0.6, y: 1.1, z: -2
+	camera.position.set( -0.8, 1.1, -0.5 );
 
 	scene.add(camera);
 
@@ -180,7 +180,7 @@ function initRender() {
 		controls.enableDamping = true;
 		controls.dampingFactor = 0.70;
 		controls.enableZoom = false;
-		controls.target.set( camera.position.x, camera.position.y, camera.position.z+0.5 );
+		controls.target.set( -0.8, 1.1, -0.55 );
 		crosshair = new THREE.Mesh(
 			new THREE.RingGeometry( 0.000001, 0.009, 32 ),
 			new THREE.MeshBasicMaterial( {
@@ -805,7 +805,7 @@ function onDocumentMouseMove( event ) {
 		        		setTimeout( function(){ activeLetters = letrasRadical; }, 100 );  
 					}
 				}
-				else if( intersections[ 0 ].object.name == 'design' ){
+				/*else if( intersections[ 0 ].object.name == 'design' ){
 					addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
 					moveLetters3d(letrasDesign, activeLetters);
 					if( particleCube != undefined ) console.log(intersections[ 0 ].object.name); 
@@ -820,7 +820,7 @@ function onDocumentMouseMove( event ) {
 					if( letrasResearch.children.length > 0 ){
 		        		setTimeout( function(){ activeLetters = letrasResearch; }, 100 );  
 					}
-				}
+				}*/
 			}
 		document.body.style.cursor = 'pointer';
 		}
@@ -930,7 +930,7 @@ function onDocumentMouseDown( e ) {
 		    	else if( infoGroup.children[0].name != 'radicalInfo' ) { addInfoSection( radicalInfoImages, 'radicalInfo', 300 );};
 		    	if( controls ) movement({ x: -0.7, y: 1.1, z: -2 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out );
 			}
-			else if( intersections[ 0 ].object.name == 'design' ){
+			/*else if( intersections[ 0 ].object.name == 'design' ){
 	    		if( infoGroup.children.length > 0 ){		
 					removeMembers();
 					removeInfoSection();
@@ -959,7 +959,7 @@ function onDocumentMouseDown( e ) {
 		    	movement({ intensity: 0 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ x: -0.6, y: 1.1, z: 0.8 }, camera.position, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	if( controls ) movement({ x: -0.7, y: 1.1, z: 0.8 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out ); 
-			} 
+			} */
 		}
 	}
 	//--------------- TRAVEL POINTS INTERSECT ------------------
@@ -967,15 +967,16 @@ function onDocumentMouseDown( e ) {
 	    raycasterTravel.setFromCamera( mouse, camera );
 	    var intersectTravel = raycasterTravel.intersectObjects( travelPoints.children );
 	    if ( intersectTravel.length > 0 ) {
-			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );  
-		    movement({ x: intersectedTravel.position.x-2, y: 1.1, z: intersectedTravel.position.z }, camera.position, 3500, 1000, TWEEN.Easing.Quartic.Out ); 
+	    	console.log(intersectedTravel.position.x, intersectedTravel.position.y, intersectedTravel.position.z)
+			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
 			if( !checkstatus.mesas ) checkstatus.mesas = true;
-			if( intersectedTravel.name == 'makerPoint' ) {	
+			if( intersectedTravel.name == 'makerPoint' ) {  	
 	    		if( infoGroup.children.length > 0 ){		
 					removeMembers();
 					removeInfoSection();
 	    		}
 	    		checkstatus.screens = false;
+	    		checkstatus.mesas = true;
 				if( controls ) {
 					movement({ x: intersectedTravel.position.x - 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
 				}
@@ -992,6 +993,7 @@ function onDocumentMouseDown( e ) {
 					removeInfoSection();
 	    		}
 	    		checkstatus.screens = false;
+	    		checkstatus.mesas = true;
 				if( controls ) movement({ x: intersectedTravel.position.x - 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
 				movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
@@ -1006,6 +1008,7 @@ function onDocumentMouseDown( e ) {
 					removeInfoSection();
 	    		}
 	    		checkstatus.screens = true;
+	    		checkstatus.mesas = false;
 				if( controls ) movement({ x: intersectedTravel.position.x + 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
 				movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
