@@ -32,10 +32,10 @@ var radicalMembers = [
 ];
 
 var checkstatus = {
-	mesas: true,
-	infoCard: true,
-	members: true,
-	travel: true,
+	mesas: false,
+	infoCard: false,
+	members: false,
+	travel: false,
 	screens: false
 }
 
@@ -222,8 +222,31 @@ function initRender() {
 	window.addEventListener( 'resize', onWindowResize, false );
 	if( !isMobile ) { document.addEventListener( 'mousemove', onDocumentMouseMove, false ); };
 	if( !isMobile ) { document.addEventListener( 'mousedown', onDocumentMouseDown, false ); };
-	$(document).on({ 'touchstart' : function(){ 
+	$('#acceptButton').on({ 'touchstart' : function(){ 
 		console.log('detecta touch');
+		checkstatus = {
+			mesas: true,
+			infoCard: true,
+			members: true,
+			travel: true,
+			screens: false
+		}
+		$('#allowVideoScreen').css('display', 'none');
+		video.play();
+		video2.play();
+		video.pause();
+		video2.pause();
+	} });
+	$('#acceptButton').on({ 'click' : function(){ 
+		console.log('detecta touch');
+		checkstatus = {
+			mesas: true,
+			infoCard: true,
+			members: true,
+			travel: true,
+			screens: false
+		}
+		$('#allowVideoScreen').css('display', 'none');
 		video.play();
 		video2.play();
 		video.pause();
@@ -240,10 +263,11 @@ function buildShape(){
 	//addExitIcon();
 
 	var skyGeometry = new THREE.SphereGeometry( 10, 32, 32 );
-	var skyMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/sky2.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
+	var skyMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('images/skyline9.jpg'), side: THREE.DoubleSide, transparent: true,  opacity: 1, color: 0xFFFFFF, depthWrite: true  });
 	sky = new THREE.Mesh( skyGeometry, skyMaterial );
 	sky.renderOrder = 0;
-	sky.rotation.y = 1.7;
+	sky.rotation.y = 1.4;
+	sky.position.y = 0.6;
 	sky.name = "sky";
 
 	scene.add( sky );
@@ -597,7 +621,7 @@ function addScreens(){
 	screensGroup.add( screen2mesh );
 
 	scene.add(screensGroup);
-	$("#allowVideo").css('display','block');
+	$('#allowVideoScreen').css('display', 'block');
 }
 
 function addTravelPoints(){
@@ -967,8 +991,7 @@ function onDocumentMouseDown( e ) {
 	    raycasterTravel.setFromCamera( mouse, camera );
 	    var intersectTravel = raycasterTravel.intersectObjects( travelPoints.children );
 	    if ( intersectTravel.length > 0 ) {
-			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );  
-		    movement({ x: intersectedTravel.position.x-2, y: 1.1, z: intersectedTravel.position.z }, camera.position, 3500, 1000, TWEEN.Easing.Quartic.Out ); 
+			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );   
 			if( !checkstatus.mesas ) checkstatus.mesas = true;
 			if( intersectedTravel.name == 'makerPoint' ) {	
 	    		if( infoGroup.children.length > 0 ){		
@@ -1077,7 +1100,7 @@ function render(){
 	if(effect) { effect.render( scene, camera ); }
 	else { renderer.render( scene, camera ); }
 
-	sky.rotation.y += 0.0003;
+	//sky.rotation.y += 0.0003;
 
 	if( particleCube != undefined ) { particleCube.geometry.verticesNeedUpdate = true; /*particleCube.lookAt( camera.position );*/ }
 
@@ -1097,7 +1120,7 @@ function render(){
 			if ( intersections.length > 0 ) {
 				if( intersections[ 0 ].object.name == 'centro') {
 					if( !loadcrosshair.visible ) loadcrosshair.visible = true;
-					if(infoGroup.children[0])console.log( intersections[ 0 ].object.name, infoGroup.children[0].name );
+					if(infoGroup.children[0]) console.log( intersections[ 0 ].object.name, infoGroup.children[0].name );
 					if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
 				}
 			    if( loadcrosshair.scale.x == 0.5 && intersections[ 0 ].object.name == 'centro') {
@@ -1108,7 +1131,7 @@ function render(){
 						removeMembers();
 						removeInfoSection();
 		    		}
-		    		checkStatus.screens = false;
+		    		checkstatus.screens = false;
 	    			movement({ intensity: 2.5 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
 	    			movement({ intensity: 0.1 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
 	    			movement({ r: 1, g: 0.8, b: 0.4 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
@@ -1191,12 +1214,12 @@ function render(){
 				if(  loadcrosshair.scale.x == 0.5  ){
 					if( intersectsScreen[ 0 ].object.name == 'screen1' ) {
 						video.play(); video2.pause();
-						movement({ x: -0.225-0.5, y: 1.1, z: 0.74 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
+						movement({ x: -0.225-0.8, y: 1.1, z: 0.74 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
 					}
 					if( intersectsScreen[ 0 ].object.name == 'screen2' ) { 
 						video2.play(); 
 						video.pause(); 
-						movement({ x: -0.225-0.5, y: 1.1, z: 4.15 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
+						movement({ x: -0.225-0.8, y: 1.1, z: 4.15 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
 					}
 				}
 				if ( intersectedScreens != intersectsScreen[ 0 ].object ) {
@@ -1225,7 +1248,6 @@ function render(){
 				if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
 			}
 	   }
-
 		//--------------- TRAVEL POINTS INTERSECT ------------------
 		if( checkstatus.travel ){
 		    raycasterTravel.setFromCamera( mouse, camera );
@@ -1244,13 +1266,12 @@ function render(){
 		    		checkstatus.mesas = true;
 		    		if( intersectedTravel.name == 'makerPoint' ){
 		    			checkstatus.screens = false;
-		    			checkstatus.mesas = true;
+		    			checkstatus.mesas = false;
 		    			movement({ r: 0.9, g: 0.9, b: 0.9 }, radicallight.color, 0, 1000, TWEEN.Easing.Quartic.Out );
 		    			movement({ x: 0, y: 0, z: 0 }, radicallight.position, 0, 1000, TWEEN.Easing.Quartic.Out );
 		    			movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    			movement({ intensity: 1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
-		    			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out ); 
-		    			movement({ x: intersectedTravel.position.x-2, y: 1.1, z: intersectedTravel.position.z }, camera.position, 3000, 1000, TWEEN.Easing.Quartic.Out ); 
+		    			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );  
 		    		}
 		    		if( intersectedTravel.name == 'labsPoint' ) {
 		    			checkstatus.screens = false;

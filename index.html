@@ -3,14 +3,12 @@
 	<head>
 		<title>VRLabs</title>
 		<meta charset="utf-8">
-		<meta name="viewport" content="user-scalable=no, initial-scale=1">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link rel="stylesheet" type="text/css" href="styles/styles.css">
-		<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans">
 		<link rel="manifest" href="manifest.json">
 		<meta name="mobile-web-app-capable" content="yes">
 	</head>
 	<body class="darkBack">
-	<iframe id="youtubeVideo" width="0" height="0" style="position: absolute; display: none;" src=""></iframe>
 		<canvas id="fireWorks" class="fireworks"></canvas>
 		<div id="logoBox" class="mainSection">
 			<section>
@@ -39,22 +37,13 @@
 				</svg>
 			</section>
 		</div>
-		<!--<div id="loadingProgress" class="loading">
-			<ul class="bokeh">
-					<li></li>
-					<li></li>
-					<li></li>
-					<li></li>
-				</ul>
-			<div id="loadingPercentage"></div>
-		</div>-->
 		<div id="container" class="displayOff">
-			<!--<div id="wrap" class="displayOff">
-			  <form id="searchForm" action="" autocomplete="off">
-			  	<input id="search" name="search" type="text" placeholder="Insert your twitter user">
-			  	<input type="submit">
-			  </form>
-			</div>-->
+		<div id="allowVideoScreen" class="allowVideo">
+			<div class="videoInstructions">VrLabs needs permissions to play videos</div>
+			<div id="acceptButton" class="acceptButton">
+				<div>Accept</div>
+			</div>
+		</div>
 		</div>
 		<script type="text/javascript" src="libs/jquery-2.1.0.min.js"></script>
 		<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.19.0/TweenMax.min.js"></script>-->
