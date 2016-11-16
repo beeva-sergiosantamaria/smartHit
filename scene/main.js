@@ -36,7 +36,8 @@ var checkstatus = {
 	infoCard: false,
 	members: false,
 	travel: false,
-	screens: false
+	screens: false,
+	videoControl: false
 }
 
 var radicalInfoImages = ['radicalInfo1','radicalInfo2','radicalInfo3'];
@@ -895,7 +896,8 @@ function onDocumentMouseMove( event ) {
 	}
 	//-------------------- PANEL INFO INTERSECTIONS ------------------------
 	if( checkstatus.infoCard ){
-		raycasterInfo.setFromCamera( mouse, camera );
+		var raycasterInfo = new THREE.Raycaster();
+			raycasterInfo.setFromCamera( mouse, camera );
 		var intersectInfo = raycasterTravel.intersectObjects( infoGroup.children );
 		if ( intersectInfo.length > 0 ) {
 			document.body.style.cursor = 'pointer';
@@ -907,8 +909,8 @@ function onDocumentMouseMove( event ) {
 
 	//-----------------------------------------------------------------------
 	//---------------------- MEMBERS GROUP ----------------------------------
-
-	raycasterMembers.setFromCamera( mouse, camera );
+	var raycasterMembers = new THREE.Raycaster();
+		raycasterMembers.setFromCamera( mouse, camera );
 	var intersectMembers = raycasterTravel.intersectObjects( membersGroup.children );
 	if ( intersectMembers.length > 0 ) {
     		document.body.style.cursor = 'pointer';
@@ -916,25 +918,25 @@ function onDocumentMouseMove( event ) {
 
 	//------------------------------------------------------------------------		
 	//---------------------- EXIT --------------------------------------------
-
-	raycasterExit.setFromCamera( mouse, camera );
+	var raycasterExit = new THREE.Raycaster();
+		raycasterExit.setFromCamera( mouse, camera );
 	var intersectExit = raycasterExit.intersectObjects( exitGroup.children );
 	if ( intersectExit.length > 0 ) {
 		if( intersectedExit != intersectExit[0].object ){
 			intersectedExit = intersectExit[0].object;
 			exitIcon.material.color.setHex( 0x00ff00 );
 		}
-		else if( intersectedExit ){
-			intersectedExit = null;
-			exitIcon.material.color.setHex( 0xffdd44 );
-		}
     	document.body.style.cursor = 'pointer';
+	}
+	else if( intersectedExit ){
+		intersectedExit = null;
+		exitIcon.material.color.setHex( 0xffdd44 );
 	}
 
 	//---------------------- VIDEO CONTROLS ----------------------------------
 	//------------------------------------------------------------------------		
-
-	raycasterVideoControls.setFromCamera( mouse, camera );
+	var raycasterVideoControls = new THREE.Raycaster();
+		raycasterVideoControls.setFromCamera( mouse, camera );
 	var intersectControls = raycasterVideoControls.intersectObjects( videoControlsGroup.children );
 	if ( intersectControls.length > 0 ) {
 		if( intersectedControls != intersectControls[0].object ){
@@ -960,30 +962,31 @@ function onDocumentMouseDown( e ) {
 	   raycaster.setFromCamera( mouse, camera );
 	   var intersects = raycaster.intersectObjects( screensGroup.children );
 		   if ( intersects.length > 0 ) {
-				if ( intersected != intersects[ 0 ].object ) {
-					intersected = intersects[ 0 ].object;
-					if( intersected.name == "screen1" ) { 
-						if( video != undefined ) { 
-							screenActive = "screen1";
-							video2.pause(); 
-							video.play(); 
-							movement({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z }, controls.target, 0, 1000, TWEEN.Easing.Quartic.Out );
-							movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out );
-							addVideoControls({ x: intersected.position.x, y: intersected.position.y, z: intersected.position.z + 0.8 });
-						} 
-					}
-					if( intersected.name == "screen2" ) { 
-						if( video2 != undefined ) { 
-							screenActive = "screen2";
-							video.pause(); 
-							video2.play();
-							movement({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z }, controls.target, 0, 1000, TWEEN.Easing.Quartic.Out );
-							movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out ); 
-							addVideoControls({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z + 0.8});
-						} 
-					};
-					console.log('inters ', intersected);
+				console.log( checkstatus.screens, checkstatus.travel );
+				checkstatus.screens = false;
+				checkstatus.travel = false;
+				intersected = intersects[ 0 ].object;
+				if( intersected.name == "screen1" ) { 
+					if( video != undefined ) { 
+						screenActive = "screen1";
+						video2.pause(); 
+						video.play(); 
+						movement({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z }, controls.target, 0, 1000, TWEEN.Easing.Quartic.Out );
+						movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out );
+						addVideoControls({ x: intersected.position.x, y: intersected.position.y, z: intersected.position.z + 0.8 });
+					} 
 				}
+				if( intersected.name == "screen2" ) { 
+					if( video2 != undefined ) { 
+						screenActive = "screen2";
+						video.pause(); 
+						video2.play();
+						movement({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z }, controls.target, 0, 1000, TWEEN.Easing.Quartic.Out );
+						movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out ); 
+						addVideoControls({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z + 0.8});
+					} 
+				};
+				console.log('inters ', intersected);
 			}
   	}
 	//----------------------------------------------
@@ -1136,15 +1139,14 @@ function onDocumentMouseDown( e ) {
 	raycasterVideoControls.setFromCamera( mouse, camera );
 	var intersectControls = raycasterVideoControls.intersectObjects( videoControlsGroup.children );
 	if ( intersectControls.length > 0 ) {
+		console.log( checkstatus.screens, checkstatus.travel );
 		if( intersectControls[0].object.name == 'play' ){
 			if(screenActive == "screen1") video.play();
 			if(screenActive == "screen2") video2.play();
-			checkstatus.screens = false;
 		}
 		if( intersectControls[0].object.name == 'pause' ){
 			if(screenActive == "screen1") video.pause();
 			if(screenActive == "screen2") video2.pause();
-			checkstatus.screens = false;
 		}
 		if(intersectControls[0].object.name == 'exit'){
 			if(screenActive == "screen1") video.pause();
@@ -1155,9 +1157,10 @@ function onDocumentMouseDown( e ) {
 	    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
 	    	movement({ intensity: 0 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
 	    	movement({ intensity: 0.1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
-	    	setTimeout(function(){ movement({ intensity: 10 }, screen1Light, 0, 2000, TWEEN.Easing.Quartic.Out );movement({ intensity: 10 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out ); }, 2000); 
-	    	scene.remove( videoControlsGroup );	
+	    	setTimeout(function(){ movement({ intensity: 10 }, screen1Light, 0, 2000, TWEEN.Easing.Quartic.Out );movement({ intensity: 10 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out ); }, 2000);
 			checkstatus.screens = true;
+			checkstatus.travel = true; 
+	    	scene.remove( videoControlsGroup );	
 		}
 	}
 	//------------------------------------------------------------------------	
@@ -1304,18 +1307,23 @@ function render(){
 				if( !loadcrosshair.visible ) loadcrosshair.visible = true;
 				if( loadcrosshair != undefined && loadcrosshair.scale.x > 0 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
 				if(  loadcrosshair.scale.x == 0.5  ){
+					checkstatus.screens = false;
+					checkstatus.travel = false;
+					checkstatus.videoControl = true;
+					removeSpriteLetters();
+					if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
 					if( intersectsScreen[ 0 ].object.name == 'screen1' ) {
+						addVideoControls({ x: -0.225, y: 1, z: 0.74 + 0.8 });
 						screenActive = "screen1";
 						video.play(); video2.pause();
-						movement({ x: -0.225+0.8, y: 1.1, z: 0.74 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
-						addVideoControls({ x: -0.225, y: 1, z: 0.74 + 0.8 });
+						movement({ x: -0.225 - 0.8, y: 1.1, z: 0.74 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
 					}
 					if( intersectsScreen[ 0 ].object.name == 'screen2' ) { 
+						addVideoControls({ x: -0.225, y: 1, z: 4.15 + 0.8 });
 						screenActive = "screen2";
 						video2.play(); 
 						video.pause(); 
-						movement({ x: -0.225-0.8, y: 1.1, z: 4.15 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
-						addVideoControls({ x: -0.225, y: 1, z: 4.15 + 0.8 });
+						movement({ x: -0.225 - 0.8, y: 1.1, z: 4.15 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
 					}
 				}
 				if ( intersectedScreens != intersectsScreen[ 0 ].object ) {
@@ -1472,58 +1480,50 @@ function render(){
 			intersectedExit = null;
 		}
 		//------------------------------------------------------------------------	
-		//------------------VIDEO CONTROLS----------------------------------------	raycasterVideoControls.setFromCamera( mouse, camera );
-		var intersectControls = raycasterVideoControls.intersectObjects( videoControlsGroup.children );
-		if ( intersectControls.length > 0 ) {
-				intersectControls[0].object.material.color.setHex( 0x00ff00 );
-			if( intersectedControls != intersectControls[0].object ){
-				console.log(intersectControls[0].object);
+		//------------------VIDEO CONTROLS----------------------------------------
+		if( checkstatus.videoControl ){
+			raycasterVideoControls.setFromCamera( mouse, camera );
+			var intersectControls = raycasterVideoControls.intersectObjects( videoControlsGroup.children );
+			if ( intersectControls.length > 0 ) {
 				intersectedControls = intersectControls[0].object;
+				intersectControls[0].object.material.color.setHex( 0x00ff00 );
+				if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ){
+					loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
+				}	
+				if( loadcrosshair.scale.x == 0.7 ) { 
+					if( intersectControls[0].object.name == 'play' ){
+						if(screenActive == "screen1") video.play();
+						if(screenActive == "screen2") video2.play();
+					}
+					else if( intersectControls[0].object.name == 'pause' ){
+						if(screenActive == "screen1") video.pause();
+						if(screenActive == "screen2") video2.pause();
+					}
+					else if(intersectControls[0].object.name == 'exit'){
+						if(screenActive == "screen1") video.pause();
+						if(screenActive == "screen2") video2.pause();
+						movement({ intensity: 4 }, radicallight, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ intensity: 0.1 }, ambientLight, 0, 1000, TWEEN.Easing.Quartic.Out );
+		    			movement({ r: 0.9, g: 0.9, b: 0.9 }, radicallight.color, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    			movement({ x: -0.8, y: 1.2, z: 2.445 }, radicallight.position, 0, 2000, TWEEN.Easing.Quartic.Out );
+		    			movement({ x: -2, y: 1.1, z: 2.5 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+		    			videoControlsGroup.children = [];
+				    	scene.remove( videoControlsGroup );	
+						checkstatus.screens = true;
+						checkstatus.travel = true;
+						checkstatus.videoControl = false;
+						screenActive = undefined;
+						intersectedControls.material.color.setHex( 0xffdd44 );
+						intersectedControls = null;
+					}
+		    	};
 			}
-			else if( intersectedControls ){
+			else if ( intersectedControls ) {
+				if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
 				intersectedControls.material.color.setHex( 0xffdd44 );
 				intersectedControls = null;
-			}
-	    	document.body.style.cursor = 'pointer';
-		}	
-
-		raycasterVideoControls.setFromCamera( mouse, camera );
-		var intersectControls = raycasterVideoControls.intersectObjects( videoControlsGroup.children );
-		if ( intersectControls.length > 0 ) {
-			intersectedControls = intersectControls[0].object;
-			intersectControls[0].object.material.color.setHex( 0x00ff00 );
-			if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ){
-				loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
 			}	
-			if( loadcrosshair.scale.x == 0.5 ) { 
-				if( intersectControls[0].object.name == 'play' ){
-					if(screenActive == "screen1") video.play();
-					if(screenActive == "screen2") video2.play();
-				}
-				else if( intersectControls[0].object.name == 'pause' ){
-					if(screenActive == "screen1") video.pause();
-					if(screenActive == "screen2") video2.pause();
-				}
-				else if(intersectControls[0].object.name == 'exit'){
-					if(screenActive == "screen1") video.pause();
-					if(screenActive == "screen2") video2.pause();
-					movement({ x: -2, y: 1.1, z: 2.5 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
-					if( controls ) movement({ x: -2+0.1, y: 1.1, z: 2.5 }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
-					movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
-			    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
-			    	movement({ intensity: 0 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
-			    	movement({ intensity: 0.1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
-			    	setTimeout(function(){ movement({ intensity: 10 }, screen1Light, 0, 2000, TWEEN.Easing.Quartic.Out );movement({ intensity: 10 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out ); }, 2000); 
-			    	scene.remove( videoControlsGroup );	
-				}
-	    	};
-		}
-		else if ( intersectedControls ) {
-			if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
-			intersectedControls.material.color.setHex( 0xffdd44 );
-			screenActive = undefined;
-			intersectedControls = null;
-		}
+		} 
 	}
 }
 
