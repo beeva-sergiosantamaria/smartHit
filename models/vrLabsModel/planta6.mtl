@@ -1,5 +1,5 @@
 # Blender MTL File: 'planta6grupos.blend'
-# Material Count: 32
+# Material Count: 33
 
 newmtl GrisMaterial
 Ns 96.078431
@@ -74,7 +74,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd paredes.png
+map_Kd maderaPino.jpg
 
 newmtl bancoMaterial.001
 Ns 96.078431
@@ -98,7 +98,7 @@ d 1.000000
 illum 1
 map_Kd maderaPino.jpg
 
-newmtl bancoMaterial_maderaPino.jpg
+newmtl bancoMaterial_paredes.png
 Ns 96.078431
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -107,7 +107,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd maderaPino.jpg
+map_Kd paredes.png
 
 newmtl chairMetalMAterial
 Ns 96.078431
@@ -118,6 +118,17 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
+
+newmtl cojines
+Ns 9.803922
+Ka 1.000000 1.000000 1.000000
+Kd 0.312483 0.311066 0.318416
+Ks 0.002000 0.002000 0.002000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd leather_bump.png
 
 newmtl glassMaterial
 Ns 96.078431
@@ -203,6 +214,17 @@ Ni 1.000000
 d 1.000000
 illum 2
 
+newmtl patas_negras
+Ns 52.941176
+Ka 1.000000 1.000000 1.000000
+Kd 0.144179 0.144179 0.144179
+Ks 0.933161 0.933161 0.933161
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd leather_bump.png
+
 newmtl pizarra
 Ns 96.078431
 Ka 1.000000 1.000000 1.000000
@@ -246,26 +268,16 @@ d 1.000000
 illum 1
 map_Kd telaSilla.jpg
 
-newmtl sofaMaterial
-Ns 96.078431
+newmtl sofa_base
+Ns 0.000000
 Ka 1.000000 1.000000 1.000000
-Kd 1.000000 0.818984 0.767867
+Kd 0.321657 0.323151 0.304785
 Ks 0.000000 0.000000 0.000000
 Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd telaSofa.jpg
-
-newmtl sofaMaterial_NONE
-Ns 96.078431
-Ka 1.000000 1.000000 1.000000
-Kd 1.000000 0.818984 0.767867
-Ks 0.000000 0.000000 0.000000
-Ke 0.000000 0.000000 0.000000
-Ni 1.000000
-d 1.000000
-illum 1
+map_Kd leather_bump.png
 
 newmtl sueloMaterial
 Ns 96.078431
@@ -276,9 +288,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd paredes.png
+map_Kd moqueta3.jpg
 
-newmtl sueloMaterial_moqueta3.jpg
+newmtl sueloMaterial_paredes.png
 Ns 96.078431
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -287,7 +299,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd moqueta3.jpg
+map_Kd paredes.png
 
 newmtl sueloNegroMaterial
 Ns 96.078431
