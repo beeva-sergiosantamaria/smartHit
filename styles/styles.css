@@ -448,6 +448,7 @@ input[type="submit"]:hover {
   right: 0;
   margin: auto;
   border-radius: 3px;
+  display: none;
 }
 .videoInstructions{
   width: 100%;
@@ -462,7 +463,6 @@ input[type="submit"]:hover {
   text-align: center;
   font-weight: bold;
   font-family: bbvaweb;
-  display: none;
 }
 .acceptButton{
   width: 25%;

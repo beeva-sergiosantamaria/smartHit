@@ -1,12 +1,12 @@
 
-var camera, crosshair, loadcrosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, intersectedScreens, intersectedTravel, intersectedInfo, intersectedMembers, intersectedExit, sky, plane, particleCube, radicalText,
+var camera, crosshair, loadcrosshair, scene, renderer, mesh, mouse, controls, controlsdevice, uniforms, group, numVertices, effect, intersected, intersectedScreens, intersectedTravel, intersectedInfo, intersectedMembers, intersectedExit, intersectedControls, sky, plane, particleCube, radicalText,
  radicalTextNParticles, researchText, researchTextNParticles, interval, radicallight, researchlight, designlight, screen1Light, screen2Light, actualLab, exitIcon, arrowIconGeometry,
 	width = window.innerWidth, 
-	height = window.innerHeight;
+	height = window.innerHeight;	
 
 var isMobile = false;
 
-var videoMP4, videoOgg, video, videoTexture, video2, videoTexture2, screen1Mesh, screen2Mesh;	
+var videoMP4, videoOgg, video, videoTexture, video2, videoTexture2, screen1Mesh, screen2Mesh, videoPlay, videoPause, videoExit, screenActive;	
 
 var centro, design, research, clever, maker, sillas, comunicacion, pared, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, teles, pantalla1, pantalla2, pantalla3, pantalla4;
 
@@ -20,11 +20,11 @@ var raycasterScreens = new THREE.Raycaster();
 var raycasterInfo = new THREE.Raycaster();
 var raycasterMembers = new THREE.Raycaster();
 var raycasterExit = new THREE.Raycaster();
+var raycasterVideoControls = new THREE.Raycaster();
 
 var manager = new THREE.LoadingManager();
 
 var radicalMembers = [
-	{ name: 'david', position: { x: -2, y: 0.8, z: -1.1 }  },
 	{ name: 'marian', position: { x: -2.9, y: 0.8, z: -1.2 }  },
 	{ name: 'sergio', position: { x: -3.2, y: 0.8, z: -1.9 }  },
 	{ name: 'carlos', position: { x: -2.9, y: 0.8, z: -2.7 }  },
@@ -66,7 +66,9 @@ var membersGroup = new THREE.Object3D();
 var infoGroup = new THREE.Object3D();
 	infoGroup.name = 'infoGroup';
 var exitGroup = new THREE.Object3D();
-	exitGroup.name = 'exitGroup';	
+	exitGroup.name = 'exitGroup';
+var videoControlsGroup = new THREE.Object3D();
+	videoControlsGroup.name = 'videoControlsGroup';			
 
 var delayTriger	= 3000;
 var activeLetters;
@@ -135,8 +137,8 @@ function initRender() {
 
 	camera = new THREE.PerspectiveCamera( 60, (width/height), 0.01, 10000000 );
 	//camera.position.set( 0, 1.4, 0 );
-	//camera.viewport = { x: 0, y: 0, width: width, height: height }
-	camera.position.set( -0.8, 1.1, -0.8 );
+	//camera.viewport = { x: 0, y: 0, width: width, height: height }-0.6, y: 1.1, z: -2
+	camera.position.set( -0.8, 1.1, -0.5 );
 
 	scene.add(camera);
 
@@ -180,7 +182,7 @@ function initRender() {
 		controls.enableDamping = true;
 		controls.dampingFactor = 0.70;
 		controls.enableZoom = false;
-		controls.target.set( camera.position.x, camera.position.y, camera.position.z+0.5 );
+		controls.target.set( -0.8, 1.1, -0.55 );
 		crosshair = new THREE.Mesh(
 			new THREE.RingGeometry( 0.000001, 0.009, 32 ),
 			new THREE.MeshBasicMaterial( {
@@ -473,6 +475,41 @@ function addExitIcon(position){
 			exitGroup.add( exitIcon );
 			scene.add( exitGroup );
 			movement({ y: position.y }, exitIcon.position, 300, 1000, TWEEN.Easing.Back.Out );
+		});
+
+}
+
+function addVideoControls(position){
+	var objLoader = new THREE.OBJLoader();
+		objLoader.setPath( 'models/' );	
+		objLoader.load( 'playControl.obj', function ( elements ) {
+			console.log('controls added: ', elements);
+
+			var exitMaterial = new THREE.MeshBasicMaterial( { color: 0xffdd44 } );
+			videoExit = new THREE.Mesh (elements.children[0].geometry, exitMaterial );
+			videoExit.scale.set( 0.05, 0.1, 0.1 );
+			videoExit.name = "exit";
+
+			var pauseMaterial = new THREE.MeshBasicMaterial( { color: 0xffdd44 } );
+			videoPause = new THREE.Mesh (elements.children[1].geometry, pauseMaterial );
+			videoPause.scale.set( 0.05, 0.1, 0.1 );
+			videoPause.name = "pause";
+
+			var playMaterial = new THREE.MeshBasicMaterial( { color: 0xffdd44 } );
+			videoPlay = new THREE.Mesh (elements.children[2].geometry, playMaterial );
+			videoPlay.scale.set( 0.05, 0.1, 0.1 );
+			videoPlay.name = "play";
+
+			videoControlsGroup.add(videoExit);
+			videoControlsGroup.add(videoPause);
+			videoControlsGroup.add(videoPlay);
+
+			videoControlsGroup.position.set( position.x-0.2, position.y+1, position.z-0.3 );
+			videoControlsGroup.rotation.y = -0.5;
+
+			scene.add( videoControlsGroup );
+
+			movement({ y: position.y }, videoControlsGroup.position, 300, 1000, TWEEN.Easing.Back.Out );
 		});
 
 }
@@ -829,7 +866,7 @@ function onDocumentMouseMove( event ) {
 		        		setTimeout( function(){ activeLetters = letrasRadical; }, 100 );  
 					}
 				}
-				else if( intersections[ 0 ].object.name == 'design' ){
+				/*else if( intersections[ 0 ].object.name == 'design' ){
 					addSpritesLetters(['blanck','blanck','plus','i', 'n', 'f', 'o']);
 					moveLetters3d(letrasDesign, activeLetters);
 					if( particleCube != undefined ) console.log(intersections[ 0 ].object.name); 
@@ -844,7 +881,7 @@ function onDocumentMouseMove( event ) {
 					if( letrasResearch.children.length > 0 ){
 		        		setTimeout( function(){ activeLetters = letrasResearch; }, 100 );  
 					}
-				}
+				}*/
 			}
 		document.body.style.cursor = 'pointer';
 		}
@@ -856,7 +893,7 @@ function onDocumentMouseMove( event ) {
 			document.body.style.cursor = 'auto';
 		}
 	}
-	//----------- PANEL INFO INTERSECTIONS ---------
+	//-------------------- PANEL INFO INTERSECTIONS ------------------------
 	if( checkstatus.infoCard ){
 		raycasterInfo.setFromCamera( mouse, camera );
 		var intersectInfo = raycasterTravel.intersectObjects( infoGroup.children );
@@ -868,8 +905,8 @@ function onDocumentMouseMove( event ) {
 		document.body.style.cursor = 'auto';
 	}*/
 
-	//---------------------------------------------	
-	//---------------------- MEMBERS GROUP --------------------------------------
+	//-----------------------------------------------------------------------
+	//---------------------- MEMBERS GROUP ----------------------------------
 
 	raycasterMembers.setFromCamera( mouse, camera );
 	var intersectMembers = raycasterTravel.intersectObjects( membersGroup.children );
@@ -894,7 +931,24 @@ function onDocumentMouseMove( event ) {
     	document.body.style.cursor = 'pointer';
 	}
 
+	//---------------------- VIDEO CONTROLS ----------------------------------
 	//------------------------------------------------------------------------		
+
+	raycasterVideoControls.setFromCamera( mouse, camera );
+	var intersectControls = raycasterVideoControls.intersectObjects( videoControlsGroup.children );
+	if ( intersectControls.length > 0 ) {
+		if( intersectedControls != intersectControls[0].object ){
+			console.log(intersectControls[0].object);
+			intersectedControls = intersectControls[0].object;
+			intersectedControls.material.color.setHex( 0x00ff00 );
+		}
+    	document.body.style.cursor = 'pointer';
+	}
+	else if( intersectedControls ){
+		intersectedControls.material.color.setHex( 0xffdd44 );
+		intersectedControls = null;
+	}
+	//------------------------------------------------------------------------			
 }
 
 function onDocumentMouseDown( e ) {
@@ -905,28 +959,32 @@ function onDocumentMouseDown( e ) {
 	   var raycaster = new THREE.Raycaster();
 	   raycaster.setFromCamera( mouse, camera );
 	   var intersects = raycaster.intersectObjects( screensGroup.children );
-	   if ( intersects.length > 0 ) {
-			if ( intersected != intersects[ 0 ].object ) {
-				intersected = intersects[ 0 ].object;
-				if( intersected.name == "screen1" ) { 
-					if( video != undefined ) { 
-						video2.pause(); 
-						video.play(); 
-						movement({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z }, controls.target, 0, 1000, TWEEN.Easing.Quartic.Out );
-						movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out );
-					} 
+		   if ( intersects.length > 0 ) {
+				if ( intersected != intersects[ 0 ].object ) {
+					intersected = intersects[ 0 ].object;
+					if( intersected.name == "screen1" ) { 
+						if( video != undefined ) { 
+							screenActive = "screen1";
+							video2.pause(); 
+							video.play(); 
+							movement({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z }, controls.target, 0, 1000, TWEEN.Easing.Quartic.Out );
+							movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out );
+							addVideoControls({ x: intersected.position.x, y: intersected.position.y, z: intersected.position.z + 0.8 });
+						} 
+					}
+					if( intersected.name == "screen2" ) { 
+						if( video2 != undefined ) { 
+							screenActive = "screen2";
+							video.pause(); 
+							video2.play();
+							movement({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z }, controls.target, 0, 1000, TWEEN.Easing.Quartic.Out );
+							movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out ); 
+							addVideoControls({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z + 0.8});
+						} 
+					};
+					console.log('inters ', intersected);
 				}
-				if( intersected.name == "screen2" ) { 
-					if( video2 != undefined ) { 
-						video.pause(); 
-						video2.play();
-						movement({ x: intersected.position.x , y: intersected.position.y, z: intersected.position.z }, controls.target, 0, 1000, TWEEN.Easing.Quartic.Out );
-						movement({ x: intersected.position.x - 0.3 , y: intersected.position.y, z: intersected.position.z }, camera.position, 0, 1000, TWEEN.Easing.Quartic.Out ); 
-					} 
-				};
-				console.log('inters ', intersected);
 			}
-		}
   	}
 	//----------------------------------------------
 	if( checkstatus.mesas ){
@@ -954,7 +1012,7 @@ function onDocumentMouseDown( e ) {
 		    	else if( infoGroup.children[0].name != 'radicalInfo' ) { addInfoSection( radicalInfoImages, 'radicalInfo', 300 );};
 		    	if( controls ) movement({ x: -0.7, y: 1.1, z: -2 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out );
 			}
-			else if( intersections[ 0 ].object.name == 'design' ){
+			/*else if( intersections[ 0 ].object.name == 'design' ){
 	    		if( infoGroup.children.length > 0 ){		
 					removeMembers();
 					removeInfoSection();
@@ -983,7 +1041,7 @@ function onDocumentMouseDown( e ) {
 		    	movement({ intensity: 0 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ x: -0.6, y: 1.1, z: 0.8 }, camera.position, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	if( controls ) movement({ x: -0.7, y: 1.1, z: 0.8 }, controls.target, 0, 2000, TWEEN.Easing.Quartic.Out ); 
-			} 
+			} */
 		}
 	}
 	//--------------- TRAVEL POINTS INTERSECT ------------------
@@ -991,14 +1049,16 @@ function onDocumentMouseDown( e ) {
 	    raycasterTravel.setFromCamera( mouse, camera );
 	    var intersectTravel = raycasterTravel.intersectObjects( travelPoints.children );
 	    if ( intersectTravel.length > 0 ) {
+	    	screenActive = undefined;
 			movement({ x: intersectedTravel.position.x, y: 1.1, z: intersectedTravel.position.z }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );   
 			if( !checkstatus.mesas ) checkstatus.mesas = true;
-			if( intersectedTravel.name == 'makerPoint' ) {	
+			if( intersectedTravel.name == 'makerPoint' ) {  	
 	    		if( infoGroup.children.length > 0 ){		
 					removeMembers();
 					removeInfoSection();
 	    		}
 	    		checkstatus.screens = false;
+	    		checkstatus.mesas = true;
 				if( controls ) {
 					movement({ x: intersectedTravel.position.x - 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
 				}
@@ -1015,6 +1075,7 @@ function onDocumentMouseDown( e ) {
 					removeInfoSection();
 	    		}
 	    		checkstatus.screens = false;
+	    		checkstatus.mesas = true;
 				if( controls ) movement({ x: intersectedTravel.position.x - 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
 				movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
@@ -1029,6 +1090,7 @@ function onDocumentMouseDown( e ) {
 					removeInfoSection();
 	    		}
 	    		checkstatus.screens = true;
+	    		checkstatus.mesas = false;
 				if( controls ) movement({ x: intersectedTravel.position.x + 0.1, y: 1.1, z: intersectedTravel.position.z }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
 				movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
 		    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
@@ -1068,6 +1130,36 @@ function onDocumentMouseDown( e ) {
 			hideInfo();
 	}
 
+	//------------------------------------------------------------------------	
+	//------------------------------------------------------------------------		
+
+	raycasterVideoControls.setFromCamera( mouse, camera );
+	var intersectControls = raycasterVideoControls.intersectObjects( videoControlsGroup.children );
+	if ( intersectControls.length > 0 ) {
+		if( intersectControls[0].object.name == 'play' ){
+			if(screenActive == "screen1") video.play();
+			if(screenActive == "screen2") video2.play();
+			checkstatus.screens = false;
+		}
+		if( intersectControls[0].object.name == 'pause' ){
+			if(screenActive == "screen1") video.pause();
+			if(screenActive == "screen2") video2.pause();
+			checkstatus.screens = false;
+		}
+		if(intersectControls[0].object.name == 'exit'){
+			if(screenActive == "screen1") video.pause();
+			if(screenActive == "screen2") video2.pause();
+			movement({ x: -2, y: 1.1, z: 2.5 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
+			if( controls ) movement({ x: -2+0.1, y: 1.1, z: 2.5 }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+			movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
+	    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+	    	movement({ intensity: 0 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+	    	movement({ intensity: 0.1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
+	    	setTimeout(function(){ movement({ intensity: 10 }, screen1Light, 0, 2000, TWEEN.Easing.Quartic.Out );movement({ intensity: 10 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out ); }, 2000); 
+	    	scene.remove( videoControlsGroup );	
+			checkstatus.screens = true;
+		}
+	}
 	//------------------------------------------------------------------------	
 }
 
@@ -1213,13 +1305,17 @@ function render(){
 				if( loadcrosshair != undefined && loadcrosshair.scale.x > 0 ) loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
 				if(  loadcrosshair.scale.x == 0.5  ){
 					if( intersectsScreen[ 0 ].object.name == 'screen1' ) {
+						screenActive = "screen1";
 						video.play(); video2.pause();
-						movement({ x: -0.225-0.8, y: 1.1, z: 0.74 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
+						movement({ x: -0.225+0.8, y: 1.1, z: 0.74 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
+						addVideoControls({ x: -0.225, y: 1, z: 0.74 + 0.8 });
 					}
 					if( intersectsScreen[ 0 ].object.name == 'screen2' ) { 
+						screenActive = "screen2";
 						video2.play(); 
 						video.pause(); 
 						movement({ x: -0.225-0.8, y: 1.1, z: 4.15 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
+						addVideoControls({ x: -0.225, y: 1, z: 4.15 + 0.8 });
 					}
 				}
 				if ( intersectedScreens != intersectsScreen[ 0 ].object ) {
@@ -1376,6 +1472,58 @@ function render(){
 			intersectedExit = null;
 		}
 		//------------------------------------------------------------------------	
+		//------------------VIDEO CONTROLS----------------------------------------	raycasterVideoControls.setFromCamera( mouse, camera );
+		var intersectControls = raycasterVideoControls.intersectObjects( videoControlsGroup.children );
+		if ( intersectControls.length > 0 ) {
+				intersectControls[0].object.material.color.setHex( 0x00ff00 );
+			if( intersectedControls != intersectControls[0].object ){
+				console.log(intersectControls[0].object);
+				intersectedControls = intersectControls[0].object;
+			}
+			else if( intersectedControls ){
+				intersectedControls.material.color.setHex( 0xffdd44 );
+				intersectedControls = null;
+			}
+	    	document.body.style.cursor = 'pointer';
+		}	
+
+		raycasterVideoControls.setFromCamera( mouse, camera );
+		var intersectControls = raycasterVideoControls.intersectObjects( videoControlsGroup.children );
+		if ( intersectControls.length > 0 ) {
+			intersectedControls = intersectControls[0].object;
+			intersectControls[0].object.material.color.setHex( 0x00ff00 );
+			if( loadcrosshair != undefined && loadcrosshair.scale.x > 0.2 ){
+				loadcrosshair.scale.set( ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000, ((loadcrosshair.scale.x*1000) - 10)/1000 );
+			}	
+			if( loadcrosshair.scale.x == 0.5 ) { 
+				if( intersectControls[0].object.name == 'play' ){
+					if(screenActive == "screen1") video.play();
+					if(screenActive == "screen2") video2.play();
+				}
+				else if( intersectControls[0].object.name == 'pause' ){
+					if(screenActive == "screen1") video.pause();
+					if(screenActive == "screen2") video2.pause();
+				}
+				else if(intersectControls[0].object.name == 'exit'){
+					if(screenActive == "screen1") video.pause();
+					if(screenActive == "screen2") video2.pause();
+					movement({ x: -2, y: 1.1, z: 2.5 }, camera.position, 0, 3000, TWEEN.Easing.Quartic.Out );
+					if( controls ) movement({ x: -2+0.1, y: 1.1, z: 2.5 }, controls.target, 0, 3000, TWEEN.Easing.Quartic.Out ); 
+					movement({ intensity: 0 }, radicallight, 0, 2000, TWEEN.Easing.Quartic.Out );
+			    	movement({ intensity: 0 }, researchlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+			    	movement({ intensity: 0 }, designlight, 0, 2000, TWEEN.Easing.Quartic.Out );
+			    	movement({ intensity: 0.1 }, ambientLight, 0, 2000, TWEEN.Easing.Quartic.Out );
+			    	setTimeout(function(){ movement({ intensity: 10 }, screen1Light, 0, 2000, TWEEN.Easing.Quartic.Out );movement({ intensity: 10 }, screen2Light, 0, 2000, TWEEN.Easing.Quartic.Out ); }, 2000); 
+			    	scene.remove( videoControlsGroup );	
+				}
+	    	};
+		}
+		else if ( intersectedControls ) {
+			if( loadcrosshair != undefined ) loadcrosshair.scale.set( 1, 1, 1 );
+			intersectedControls.material.color.setHex( 0xffdd44 );
+			screenActive = undefined;
+			intersectedControls = null;
+		}
 	}
 }
 

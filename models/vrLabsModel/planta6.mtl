@@ -278,7 +278,7 @@ d 1.000000
 illum 1
 map_Kd paredes.png
 
-newmtl sueloMaterial_sueloPlacas2.jpg
+newmtl sueloMaterial_moqueta3.jpg
 Ns 96.078431
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -287,7 +287,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd sueloPlacas2.jpg
+map_Kd moqueta3.jpg
 
 newmtl sueloNegroMaterial
 Ns 96.078431
