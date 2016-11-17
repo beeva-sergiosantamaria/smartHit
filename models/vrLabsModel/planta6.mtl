@@ -139,7 +139,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 0.658120
 illum 3
-map_Kd cristal2.png
+map_Kd paredes.png
 
 newmtl glassMaterial_NONE
 Ns 96.078431
@@ -152,7 +152,7 @@ d 0.658120
 illum 3
 map_Kd cristal2.png
 
-newmtl glassMaterial_paredes.png
+newmtl glassMaterial_cristal2.png
 Ns 96.078431
 Ka 0.641026 0.641026 0.641026
 Kd 1.000000 0.957640 0.989310
@@ -161,7 +161,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 0.658120
 illum 3
-map_Kd paredes.png
+map_Kd cristal2.png
 
 newmtl grassMaterial
 Ns 96.078431
