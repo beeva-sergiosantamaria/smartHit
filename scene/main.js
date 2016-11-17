@@ -663,7 +663,7 @@ function addScreens(){
 }
 
 function addTravelPoints(){
-	var locationPoints = [{ x: -0.7, y: 1.4, z: -5.5 }, { x: -2, y: 1.4, z: 2.5 }, { x: -0.8, y: 1.4, z: -0.5 }];
+	var locationPoints = [{ x: -0.7, y: 1.7, z: -5.5 }, { x: -2, y: 1.7, z: 2.5 }, { x: -0.8, y: 1.7, z: -0.5 }];
 	var namePoints = ['makerPoint', 'tvPoint', 'labsPoint'];
 	var objLoader = new THREE.OBJLoader();
 		objLoader.setPath( 'models/' );	
