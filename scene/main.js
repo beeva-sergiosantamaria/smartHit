@@ -6,7 +6,7 @@ var camera, crosshair, loadcrosshair, scene, renderer, mesh, mouse, controls, co
 
 var isMobile = false;
 
-var videoMP4, videoOgg, video, videoTexture, video2, videoTexture2, screen1Mesh, screen2Mesh, videoPlay, videoPause, videoExit, screenActive;	
+var videoMP4, videoOgg, video, videoTexture, video2, videoTexture2, wallVideoTexture, wallVideo, screen1Mesh, screen2Mesh, videoPlay, videoPause, videoExit, screenActive;	
 
 var centro, design, research, clever, maker, sillas, comunicacion, pared, cristaleraFrontal, cristaleraEntrada, cristaleraAgora, banco, teles, pantalla1, pantalla2, pantalla3, pantalla4;
 
@@ -101,7 +101,6 @@ $(document).on("keydown", function (e) {
         TweenMax.to(camera,0.5,{fov:"-=5",onUpdate:function(){
             camera.updateProjectionMatrix();
         }});
-       
     }
     else if (e.keyCode == '40') {
     	if( particleCube != undefined ) particlesDisperse( researchTextNParticles, 'research');
@@ -132,6 +131,11 @@ function initRender() {
 	//renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 	renderer.setViewport( 0,0,width, height );
 	renderer.getMaxAnisotropy();
+
+	/*renderer = new THREE.CSS3DRenderer();
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.domElement.style.position = 'absolute';
+	renderer.domElement.style.top = 0;*/
 
 	var container = document.getElementById('container');
 	container.appendChild( renderer.domElement );
@@ -241,7 +245,6 @@ function initRender() {
 		video2.pause();
 	} });
 	$('#acceptButton').on({ 'click' : function(){ 
-		console.log('detecta touch');
 		checkstatus = {
 			mesas: true,
 			infoCard: true,
@@ -250,6 +253,7 @@ function initRender() {
 			screens: false
 		}
 		$('#allowVideoScreen').css('display', 'none');
+		wallVideo.play();
 		video.play();
 		video2.play();
 		video.pause();
@@ -349,6 +353,7 @@ function addModel(){
 						addLetters3D(['D','e', 's', 'i', 'g', 'n' ], { x: -2.7, y: 1, z: 3 }, letrasDesign);
 
 						addScreens();
+						addWallScreens();
 
 					}, 1000 );
 				}
@@ -360,12 +365,12 @@ function addModel(){
 	THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
 	var mtlLoader = new THREE.MTLLoader();
 		mtlLoader.setPath( 'models/vrLabsModel/' );
-		mtlLoader.load( 'planta6.mtl', function( materials ) {
+		mtlLoader.load( 'planta6grupos.mtl', function( materials ) {
 			materials.preload();
 			var objLoader = new THREE.OBJLoader();
 			objLoader.setMaterials( materials );
 			objLoader.setPath( 'models/vrLabsModel/' );	
-			objLoader.load( 'planta6.obj', function ( elements ) {
+			objLoader.load( 'planta6grupos.obj', function ( elements ) {
 
 				//scene.add(elements);
 
@@ -662,15 +667,44 @@ function addScreens(){
 	$('#allowVideoScreen').css('display', 'block');
 }
 
+
+function addWallScreens(){
+
+	var videoMP4 = document.createElement('video').canPlayType('video/mp4') !== '' ? true : false;
+	var videoOgg = document.createElement('video').canPlayType('video/ogg') !== '' ? true : false;
+
+	if( videoMP4 ){
+		var url	= 'videos/under.mp4';
+	}
+	else if( videoOgg ){
+		var url	= 'videos/under.ogv';
+	}
+	else alert('cant play mp4 or ogv')
+
+	wallVideoTexture = new THREEx.VideoTexture(url);
+	wallVideo = wallVideoTexture.video;
+
+	var screen1Geometry = new THREE.PlaneGeometry( 3.2, 1.80, 1, 1 );
+	var screen1Material = new THREE.MeshBasicMaterial({ map	: wallVideoTexture.texture, overdraw: true, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+	var wallscreen1Mesh = new THREE.Mesh( screen1Geometry, screen1Material );
+	wallscreen1Mesh.position.set( -3.1 , 0.9 , -3.95 );
+	wallscreen1Mesh.renderOrder = 3;
+	//screen1Mesh.rotateY( -Math.PI/2 );
+	wallscreen1Mesh.name = 'screen1';
+
+	scene.add(wallscreen1Mesh);
+
+	wallVideo.play();
+}
+
 function addTravelPoints(){
-	var locationPoints = [{ x: -0.7, y: 1.7, z: -5.5 }, { x: -2, y: 1.7, z: 2.5 }, { x: -0.8, y: 1.7, z: -0.5 }];
+	var locationPoints = [{ x: -0.7, y: 1.75, z: -5.5 }, { x: -2, y: 1.75, z: 2.5 }, { x: -0.8, y: 1.75, z: -0.5 }];
 	var namePoints = ['makerPoint', 'tvPoint', 'labsPoint'];
 	var objLoader = new THREE.OBJLoader();
 		objLoader.setPath( 'models/' );	
 		objLoader.load( 'arrow.obj', function ( elements ) {
 		console.log('icono exit: ', elements);
 		arrowIconGeometry = elements.children[0].geometry;
-
 		for ( var a = 0; a < locationPoints.length; a++ ){
 			var geometry = arrowIconGeometry;
 			var material = new THREE.MeshBasicMaterial( {color: 0xffdd44} );
@@ -1202,6 +1236,8 @@ function render(){
 	if( videoTexture != undefined ) videoTexture.update();
 
 	if( videoTexture2 != undefined ) videoTexture2.update();
+
+	if( wallVideoTexture != undefined ) wallVideoTexture.update();
 
 	if( travelPoints.children[0] ) travelPoints.children[0].rotation.y += 0.01;
 	if( travelPoints.children[1] ) travelPoints.children[1].rotation.y += 0.01;
