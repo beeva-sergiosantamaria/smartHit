@@ -2,7 +2,7 @@ var members = [
 	{ 'name': 'carlos', 'url': 'https://www.centrodeinnovacionbbva.com/sites/default/files/777.jpg', 'id': '990664da-b693-4e05-9ebb-73513837719a' },
 	{ 'name': 'paula con gafas', 'url': 'https://www.beeva.com/wp-content/uploads/2016/07/BEEVA-Paula-Cordero-250x250.jpg', 'id': 'e74d3aed-6412-4388-b63a-af79bcdcdfa8' },
 	{ 'name': 'paula sin gafas', 'url': 'https://www.beeva.com/wp-content/uploads/2016/07/BEEVA-Paula-Cordero-250x250.jpg', 'id': '6b2f0756-e656-42cc-a021-b539513a856d' },
-	{ 'name': 'sergio', 'url': '', 'id': 'fad15a65-8fb8-4f45-b497-a484728632b2' },
+	{ 'name': 'sergio', 'url': '', 'id': 'f50f2600-44ff-4c99-af6d-6e44cf0951f5' },
 	{ 'name': 'salva', 'url': '', 'id': '349e50d6-94cf-436f-98db-04c3d09cc5df' },
 	{ 'name': 'yisus', 'url': '', 'id': '3021e09a-b275-4695-abfb-5d64931f3098' },
 	{ 'name': 'carlos', 'url': '', 'id': 'ffa15674-f20a-40da-b4d2-112c0172b20f' }

@@ -72,14 +72,11 @@ function initRender() {
 	controls.target.set( 0, 0, 0 );
 	controls.enabled = true;
 
-    ambientLight = new THREE.AmbientLight( 0xffffff, 0.2 );
+    ambientLight = new THREE.AmbientLight( 0xffffff, 0 );
     ambientLight.position.set( 0, 0, 0 );
     scene.add(ambientLight);
 
 	buildShape();
-
-	var axisHelper = new THREE.AxisHelper( 0.4 );
-	scene.add( axisHelper );
 
 	window.addEventListener( 'resize', onWindowResize, false );
 }
@@ -142,8 +139,6 @@ function womanFaceAnimated(){
 		WomanJSONface.rotation.x = -1.5;
 		WomanJSONface.position.set( 0, 0, 0 );
 		WomanJSONface.scale.set( 0.1, 0.1, 0.1 );
-		var axisHelper = new THREE.AxisHelper( 0.4 );
-		WomanJSONface.add( axisHelper );
 		scene.add( WomanJSONface );
 	});
 	camera.position.set( 0, 0, 2.5 );
@@ -185,7 +180,7 @@ function initTracker(){
 
 		  	movement({ opacity: 1 }, WomanJSONface.material, 0, 1000, TWEEN.Easing.Quartic.Out );
 		  	movement({ x: 1 , y: 1, z: 1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
-			setTimeout(function(){ faceDetectProcess( dataCaptured ); turnToHappy(); }, 500); 
+			setTimeout(function(){ faceDetectProcess( dataCaptured ); }, 500); 
 		}
 		else {
 			movement({ opacity: 0 }, WomanJSONface.material, 0, 1000, TWEEN.Easing.Quartic.Out );
@@ -257,6 +252,7 @@ function checkUser( id ){
 		    data: JSON.stringify({ 'faceId1': element.id, 'faceId2': id }),
 		    success: function (data) {
 		    	if( data.isIdentical == true ) { 
+		    		console.log('is identical');
 		    		protagonist = element.name;
 					speackFace( 'Conchita', momentSpeech + ' ' + protagonist ); 
 					turnToHappy();
@@ -282,12 +278,12 @@ function speackFace( Avatar, texto ){
 		 data: JSON.stringify( { voice: Avatar, text: texto} ),
 		 contentType: "application/json",
 		 success: function(data){
-		 	if( WomanJSONface != undefined )  { setTimeout( sayAplayer.play(), 600); }; 
+		 	if( WomanJSONface != undefined )  { setTimeout( womanSayAplayer.play(), 600); }; 
 		   	audio = new Audio( data.voice );
         	audio.play();
 			audio.addEventListener('ended', function(){
 				if( WomanJSONface != undefined ){
-				    sayAplayer.stop();
+				    womanSayAplayer.stop();
 				    recognition.start();
 				    setTimeout( function(){ stopAllAnims() }, 2000 );
 				}
