@@ -117,7 +117,7 @@ function womanFaceAnimated(){
 		womanCejaLeftUpnimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'cejaLeftUp', cejaLeftUp, 15, false );
 		womanCejaRightUpnimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'cejaRightUp', cejaRightUp, 15, false );
 		womanCejaLeftDownnimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'cejaLeftDown', cejaLeftDown, 15, false );
-		womanCejaRightDownnimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'cejaLeftDown', cejaLeftDown, 15, false );
+		womanCejaRightDownnimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'cejaRightDown', cejaRightDown, 15, false );
 		womanSadMounthnimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'sadMounth', sadMounth, 15, false );
 
 		womanSayAplayer = womanMixer.clipAction( womanSayAnimation ).setDuration( 0.5 );
