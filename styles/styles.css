@@ -12,7 +12,7 @@ html,body {
 }
 
 .darkBack {
-    background-color: #333333;
+    background-color: #000000;
     -webkit-transition: all ease-out 4s;
     -moz-transition: all ease-out 4s;
     -o-transition: all  ease-out 4s;
