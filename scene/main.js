@@ -189,36 +189,16 @@ function initTracker(){
 	}, true);
 }
 
-function faceDetectProcess( image ) {
-
-	speechRecognitionOn(); 
-
-	var makeblob = function (dataURL) {
-        var BASE64_MARKER = ';base64,';
-        if (dataURL.indexOf(BASE64_MARKER) == -1) {
-            var parts = dataURL.split(',');
-            var contentType = parts[0].split(':')[1];
-            var raw = decodeURIComponent(parts[1]);
-            return new Blob([raw], { type: contentType });
-        }
-        var parts = dataURL.split(BASE64_MARKER);
-        var contentType = parts[0].split(':')[1];
-        var raw = window.atob(parts[1]);
-        var rawLength = raw.length;
-
-        var uInt8Array = new Uint8Array(rawLength);
-
-        for (var i = 0; i < rawLength; ++i) {
-            uInt8Array[i] = raw.charCodeAt(i);
-        }
-
-        return new Blob([uInt8Array], { type: contentType });
-    }
-
-    var imageToSend = makeblob ( image );
-
-	$.ajax({
+/**
+ * Petición a Microsoft Cognitive Services para detectar una imagen (Detect)
+ * @param {String} imageToSend
+ * @returns {String}
+ */
+function faceDetectImage ( imageToSend ) {
+  var IdCara = "-";
+	jQuery.ajax({
 	    type: 'POST',
+      async: false,
 	    url: 'https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=true&returnFaceAttributes=age,gender,facialHair',
 	    beforeSend: function (data) {
 			data.setRequestHeader("Content-Type", "application/octet-stream");
@@ -229,40 +209,138 @@ function faceDetectProcess( image ) {
 	    data: imageToSend,
 	    success: function (data) {
 	    	console.log( data[0].faceId );
-	    	checkUser( data[0].faceId );
+        IdCara = data[0].faceId;
 	    }
 	})
 	.fail(function (x) {
 	    console.log("error:"+x.statusText+x.responseText);
 	});
+  
+  return IdCara;
+}
+
+/**
+ * Obtiene los datos de una imagen a partir de una url una vez cargada (asíncrona).
+ * @see https://davidwalsh.name/convert-image-data-uri-javascript
+ * 
+ * @param {String} url
+ * @param {function} callback
+ * @returns {Blob}
+ */
+function getDataUri(url, callback) {
+    var image = new Image();
+    image.onload = function () {
+        var canvas = document.createElement('canvas');
+        canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
+        canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
+        canvas.getContext('2d').drawImage(this, 0, 0);
+        // Get raw image data
+        //callback(canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''));
+        // ... or get as Data URI
+        callback(canvas.toDataURL('image/png'));
+    };
+
+    image.src = url;
+}
+
+/**
+ * Comvierte a Blob la info RAW de una imagen
+ * @param {String} dataURL
+ * @returns {Blob}
+ */
+function makeblob(dataURL) {
+  var BASE64_MARKER = ';base64,';
+  if (dataURL.indexOf(BASE64_MARKER) === -1) {
+    var parts = dataURL.split(',');
+    var contentType = parts[0].split(':')[1];
+    var raw = decodeURIComponent(parts[1]);
+    return new Blob([raw], { type: contentType });
+  }
+  var parts = dataURL.split(BASE64_MARKER);
+  var contentType = parts[0].split(':')[1];
+  var raw = window.atob(parts[1]);
+  var rawLength = raw.length;
+
+  var uInt8Array = new Uint8Array(rawLength);
+
+  for (var i = 0; i < rawLength; ++i) {
+      uInt8Array[i] = raw.charCodeAt(i);
+  }
+
+  return new Blob([uInt8Array], { type: contentType });
+}
+
+/**
+ * Proceso de detección de detección de un usuario entre las imágenes guardadas
+ * @param {String} image
+ * @returns {undefined}
+ */
+function faceDetectProcess( image ) {
+	speechRecognitionOn(); 
+  // Obtenemos el FaceId de la imagen tomada con la WEBCAM.
+  var imageToSend = makeblob ( image );
+  var CamFaceId = faceDetectImage(imageToSend);
+
+  // Obtenemos los FaceId de las imágenes almacenadas en la carpeta images
+  // Recorremos la carpeta de imágenes
+  var url = window.location.href;
+  var lastSlashPos = url.lastIndexOf("/");
+  var dir = url.substring(0, lastSlashPos);
+  dir = dir + "/images/";
+  var ext = "png";
+
+  // Accedemos a la url de la carpeta de imágenes (pagina autogenerada), 
+  // obtenemos los enlaces de las imagenes y sacamos su info
+  jQuery.ajax({async: false, url: dir}).then(function (html) {
+    // Creamos un elemento DOM temporal
+    var document = jQuery(html);
+    // Por cada imagen PNG encontrada, hacemos la petición
+    document.find("a[href$='."+ext+"']").each(function () {
+      var imageUrl = dir + jQuery(this).attr('href');
+      getDataUri(imageUrl, function(dataUri) {
+        checkUser( CamFaceId, dataUri );
+      });
+    });
+  });
 };
 
-function checkUser( id ){
-
-	$.each( members, function(index, element) {
-		$.ajax({
-		    type: 'POST',
-		    url: 'https://api.projectoxford.ai/face/v1.0/verify',
-		    beforeSend: function (data) {
-				data.setRequestHeader("Content-Type", "application/json");
-				data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey );
-			},
-		    dataType: "json",
-		    contentType: "application/json",
-		    data: JSON.stringify({ 'faceId1': element.id, 'faceId2': id }),
-		    success: function (data) {
-		    	if( data.isIdentical == true ) { 
-		    		console.log('is identical');
-		    		protagonist = element.name;
-					speackFace( 'Conchita', momentSpeech + ' ' + protagonist ); 
-					turnToHappy();
-				}	
-		    }
-		})
-		.fail(function (x) {
-		    console.log("error:"+x.statusText+x.responseText);
-		});
-	})
+/**
+ * Compara dos caras en Microsoft Cognitive Services (verify) 
+ * @param {String} faceId
+ * @param {String} dataImgUser
+ * @returns {undefined}
+ */
+function checkUser( faceId, dataImgUser ) {
+  var par = JSON.stringify({});
+  var faceIdUser = faceDetectImage(makeblob ( dataImgUser ));
+  par = JSON.stringify({ 'faceId1': faceId, 'faceId2': faceIdUser });
+  console.log(par);
+  if (faceIdUser !== "-") {
+    $.ajax({
+        type: 'POST',
+        url: 'https://api.projectoxford.ai/face/v1.0/verify',
+        beforeSend: function (data) {
+        data.setRequestHeader("Content-Type", "application/json");
+        data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey );
+      },
+        dataType: "json",
+        contentType: "application/json",
+        data: par,
+        success: function (data) {
+          if( data.isIdentical === true ) {
+            alert('Wellcome again!');
+            // console.log('is identical');
+            //console.log(data);
+            // protagonist = element.name;
+            // speackFace( 'Conchita', momentSpeech + ' ' + protagonist ); 
+            // turnToHappy();
+          }
+        }
+    })
+    .fail(function (x) {
+      // console.log("error:"+x.statusText+x.responseText);
+    });
+  }
 }
 
 function speackFace( Avatar, texto ){
