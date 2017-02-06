@@ -1,3 +1,4 @@
+var facesIds = [];
 
 var camera, scene, renderer, JSONface, WomanJSONface, OBJface, controls, mixer, womanMixer, clip, audio, recognition, protagonist,
 	width = window.innerWidth, 
@@ -33,7 +34,7 @@ $( document ).ready(function() {
 	    data: JSON.stringify( { text: 'hola sergio' }),
 	    contentType: "application/json",
 	    success: function (data) {
-	    	console.log(data);
+	    	// console.log(data);
 	    }
 	})
 	.fail(function (x) {
@@ -175,49 +176,100 @@ function initTracker(){
 		if(faceStatusEvent.status == 'found'){
 
 			canvasInput.getContext('2d').drawImage(videoInput, 0, 0, 320, 240);
-		    var dataCaptured = canvasInput.toDataURL("image/png").replace("image/png", "image/octet-stream");
-		    document.getElementById('photo').setAttribute('src', dataCaptured);
-
-		  	movement({ opacity: 1 }, WomanJSONface.material, 0, 1000, TWEEN.Easing.Quartic.Out );
-		  	movement({ x: 1 , y: 1, z: 1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
-			setTimeout(function(){ faceDetectProcess( dataCaptured ); }, 500); 
+      var dataCaptured = canvasInput.toDataURL("image/png").replace("image/png", "image/octet-stream");
+      document.getElementById('photo').setAttribute('src', dataCaptured);
+      
+      movement({ opacity: 1 }, WomanJSONface.material, 0, 1000, TWEEN.Easing.Quartic.Out );
+      movement({ x: 1 , y: 1, z: 1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
+			setTimeout(function(){ faceDetectProcess( dataCaptured ); }, 0); 
 		}
 		else {
 			movement({ opacity: 0 }, WomanJSONface.material, 0, 1000, TWEEN.Easing.Quartic.Out );
-		  	movement({ x: 0.1 , y: 0.1, z: 0.1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
+      movement({ x: 0.1 , y: 0.1, z: 0.1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
 		}
 	}, true);
 }
 
 /**
- * Petición a Microsoft Cognitive Services para detectar una imagen (Detect)
- * @param {String} imageToSend
- * @returns {String}
+ * Petición a Microsoft Cognitive Services (Detect) para detectar una cara a partir de una imagen RAW
+ * Límites: 30,000 transactions per month, 20 per minute.
+ * 
+ * @param {type} imageToSend
+ * @returns {faceDetectImage.promise|faceDetectImage.promise.mainfaceDetectImage#promise}
  */
 function faceDetectImage ( imageToSend ) {
-  var IdCara = "-";
+  
   var promise = new Promise(function (resolve, reject) {
     jQuery.ajax({
-        type: 'POST',
-        url: 'https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=true&returnFaceAttributes=age,gender,facialHair',
-        beforeSend: function (data) {
+      type: 'POST',
+      url: 'https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=true&returnFaceAttributes=age,gender,facialHair',
+      beforeSend: function (data) {
         data.setRequestHeader("Content-Type", "application/octet-stream");
-        data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey );
+        data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey);
       },
-        processData: false,
-        contentType: "application/octet-stream",
-        data: imageToSend,
-        success: function (data) {
-          //console.log( data[0].faceId );
+      processData: false,
+      contentType: "application/octet-stream",
+      data: imageToSend,
+      success: function (data, textStatus, xhr) {
+        console.log(xhr.status);
+        if (data[0].faceId !== 'undefined') {
           IdCara = data[0].faceId;
           resolve(IdCara);
+        } else {
+          resolve(false);
         }
-    })
-    .fail(function (x) {
-      // console.log("error:"+x.statusText+x.responseText);
-      reject(new Error("error:"+x.statusText+x.responseText));
+      },
+      statusCode: {
+        429: function() {
+          console.log("429 - RateLimitExceeded on Detect request: Rate limit is exceeded. Try again later. 30,000 transactions per month, 20 per minute");
+          resolve(false);
+        }
+      }
     });
+//    .fail(function (x) {
+//      // console.log("error detect: " + x.responseText);
+//      resolve(false);
+//      // reject(new Error("error: "+x));
+//    });
   });
+  return promise;
+}
+
+/**
+ * Petición a Microsoft Cognitive Services (Detect) para detectar una cara a partir de una URL válida
+ * Límites: 30,000 transactions per month, 20 per minute.
+ * 
+ * @param {String} url
+ * @returns {faceDetectImageUrl.promise|faceDetectImageUrl.promise.mainfaceDetectImageUrl#promise}
+ */
+function faceDetectImageUrl (url) {
+  var urlData = new Object();
+  // urlData.url = "http://ghk.h-cdn.co/assets/16/04/480x596/paul-newman-1960.jpg";
+  urlData.url = url;   
+  var data = JSON.stringify(urlData);
+  // console.log(data);
+	var promise = new Promise(function (resolve, reject) {
+		jQuery.ajax({
+		    type: 'POST',
+		    async: false,
+		    url: 'https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=true&returnFaceAttributes=age,gender,facialHair',
+		    beforeSend: function (data) {
+		    data.setRequestHeader("Content-Type", "application/json");
+		    data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey );
+		  },
+		    processData: false,
+		    contentType: "application/json",
+		    dataType: "json",
+		    data: data,
+		    success: function (data) {
+		      console.log( data[0].faceId );
+		      IdCara = data[0].faceId;
+		    }
+		})
+		.fail(function (x) {
+		  console.log("error:"+x.statusText+x.responseText);
+		});
+	});
   return promise;
 }
 
@@ -225,12 +277,11 @@ function faceDetectImage ( imageToSend ) {
  * Obtiene los datos de una imagen a partir de una url una vez cargada (asíncrona).
  * @see https://davidwalsh.name/convert-image-data-uri-javascript
  * 
- * @param {String} url
- * @returns {Blob}
+ * @param {type} url
+ * @returns {getDataUri.promise|getDataUri.promise.maingetDataUri#promise}
  */
 function getDataUri(url ) {
   var image = new Image();
-
   var promise = new Promise(function (resolve, reject) {
     image.onload = function () {
       var canvas = document.createElement('canvas');
@@ -238,9 +289,7 @@ function getDataUri(url ) {
       canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
       canvas.getContext('2d').drawImage(this, 0, 0);
       // Get raw image data
-      //callback(canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''));
-      // ... or get as Data URI
-      resolve(canvas.toDataURL('image/png'));
+      resolve( {"url": url, "raw": canvas.toDataURL('image/png')} );
     };
 
     if (!image) {
@@ -280,100 +329,153 @@ function makeblob(dataURL) {
 }
 
 /**
- * Proceso de detección de detección de un usuario entre las imágenes guardadas
+ * Proceso de detección de un usuario entre las imágenes guardadas
  * @param {String} image
  * @returns {undefined}
  */
 function faceDetectProcess( image ) {
 	speechRecognitionOn(); 
-  // Obtenemos el FaceId de la imagen tomada con la WEBCAM.
-  var imageToSend = makeblob ( image );
-  var PromesaCamFaceId = faceDetectImage(imageToSend);
-
+  var promesasFacesIds = [];
   
-  // Obtenemos los FaceId de las imágenes almacenadas en la carpeta images
   // Recorremos la carpeta de imágenes
   var url = window.location.href;
   var lastSlashPos = url.lastIndexOf("/");
   var dir = url.substring(0, lastSlashPos);
   dir = dir + "/images/";
   var ext = "png";
+  
+  // Si tenemos ya guardados los FaceIds de una detección anterior..
+  if (facesIds.length > 0) {
+    // Comparamos la nueva cara de la webcam
+    var camData = {'url': '--', 'raw': image};
+    // Lanzamos la petición con promesa de obtener un FaceId de la imagen
+    promesasFacesIds.push( faceDetectImage(makeblob(image)) );
+    
+  } else {
+    // Accedemos a la url de la carpeta de imágenes (pagina autogenerada por apache), 
+    // obtenemos los enlaces de las imagenes y sacamos su info
+    jQuery.ajax({url: dir}).then(function (html) {
+      // Creamos un elemento DOM temporal
+      var document = jQuery(html);
+      var promesasImgData = [];
 
-  // Accedemos a la url de la carpeta de imágenes (pagina autogenerada por apache), 
-  // obtenemos los enlaces de las imagenes y sacamos su info
-  jQuery.ajax({url: dir}).then(function (html) {
-    // Creamos un elemento DOM temporal
-    var document = jQuery(html);
-    var promesas = [];
-    
-    // Por cada imagen PNG encontrada, hacemos la petición
-    document.find("a[href$='."+ext+"']").each(function () {
-      var imageUrl = dir + jQuery(this).attr('href');
-      promesas.push(
-        getDataUri(imageUrl)
-      );
-    });
-    
-    Promise.all(promesas).then(function(values) {
-      // console.log(values);
-      var CamFaceId = "-";
-      PromesaCamFaceId.then(function(resCamFaceId){
-        var CamFaceId = resCamFaceId;
-        checkUser( CamFaceId, values );
+      // Por cada imagen PNG encontrada, pedimos la info de la image y guardamos la promesa
+      document.find("a[href$='."+ext+"']").each(function () {
+        var imageUrl = dir + jQuery(this).attr('href');
+        // Lanzamos promesa de obtener la url de la imagen
+        promesasImgData.push(getDataUri(imageUrl));
+      });
+
+      // Cuando tengo la info de todas las imágenes guardadas
+      Promise.all(promesasImgData).then(function(dataImgUsers) {
+
+        // AGREGAMOS LA IMAGEN DE LA WEBCAM al principio del array
+        var camData = {'url': '--', 'raw': image};
+        dataImgUsers.unshift(camData);
+        var dataImgUser;
+        
+
+        // Por cada imagen, obtenemos su faceId
+        for (i = 0; i < dataImgUsers.length; i++) {
+          dataImgUser = dataImgUsers[i];
+          // Por cada img, pedimos su FaceId y guardamos la promesa
+          // Lanzamos la petición con promesa de obtener un FaceId de la imagen
+          promesasFacesIds.push( faceDetectImage(makeblob(dataImgUser.raw)) );
+        }
+
+        // Cuando se cumplen todas las peticiones y tenemos los FaceId de todas las img.. 
+        Promise.all(promesasFacesIds).then(function(faceIdUsers) {
+          // console.log(faceIdUsers);
+          var usuarios = [];
+          var usuario = {'url': '--', 'faceId': faceIdUsers[0]};
+          usuarios.push(usuario);
+          for (i = 1; i < faceIdUsers.length; i++) {
+            // Guardamos las url y los faceId de los usuarios registrados
+            usuarios.push({'url': dataImgUsers[i].url, 'raw': dataImgUsers[i].raw, 'faceId': faceIdUsers[i] });
+          }
+          // Comprobamos si el de la webcam es alguno de nuestros ususarios guardados
+          facesIds = usuarios;
+          checkUser( usuarios );
+        });
       });
     });
-  });
+  }
 };
 
 /**
+ * Compara el FaceId de la web cam con la cara de una foto guardada
+ * @param {String} faceIdCam
+ * @param {JSON} usuario
+ * @returns {compareUsers.promise.maincompareUsers#promise|compareUsers.promise}
+ */
+function compareUsers(faceIdCam, usuario) {
+  var promise = new Promise(function (resolve, reject) {
+    $.ajax({
+      type: 'POST',
+      url: 'https://api.projectoxford.ai/face/v1.0/verify',
+      beforeSend: function (data) {
+        data.setRequestHeader("Content-Type", "application/json");
+        data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey);
+      },
+      dataType: "json",
+      contentType: "application/json",
+      data: JSON.stringify({'faceId1': faceIdCam, 'faceId2': usuario.faceId}),
+      success: function(data, textStatus, xhr) {
+        console.log(xhr.status);
+        if (xhr.status === 200)  {
+          if (data.isIdentical === true) {
+            resolve(usuario);
+            // alert('Welcome back again, '+faceIdUsers[i].url+'!');
+            // console.log('is identical');
+            //console.log(data);
+            // protagonist = element.name;
+            // speackFace( 'Conchita', momentSpeech + ' ' + protagonist ); 
+            // turnToHappy();
+          } else {
+            resolve(false);
+          }           
+        } else {
+          console.log("estado verify: "+xhr.status)
+          resolve(false);
+        }
+      },
+      statusCode: {
+        429: function() {
+          console.log("429 - RateLimitExceeded on Verify: Rate limit is exceeded. Try again later. 30,000 transactions per month, 20 per minute");
+        }
+      }
+    })
+    .fail(function (x, textStatus, xhr) {
+      // console.log("error verify: "+x);
+    });
+  });
+  return promise;
+}
+
+/**
  * Compara dos caras en Microsoft Cognitive Services (verify) 
- * @param {String} faceId
- * @param {Array} dataImgUsers
+ * @param {Array} faceIdUsers
  * @returns {undefined}
  */
-function checkUser( faceId, dataImgUsers ) {
-  var par = JSON.stringify({});
-  var faceIdUser = "";
-  var dataImgUser = "";
-  var promesas = [];
-  
-  for (i = 0; i < dataImgUsers.length; i++) {
-    dataImgUser = dataImgUsers[i];
-    // faceIdUser = faceDetectImage(makeblob ( dataImgUser ));
-    promesas.push(faceDetectImage( makeblob(dataImgUser) ));
-  }
-    
-  Promise.all(promesas).then(function(faceIdUsers) {
-    for (i = 0; i < faceIdUsers.length; i++) {
-      faceIdUser = faceIdUsers[i];
-      par = JSON.stringify({ 'faceId1': faceId, 'faceId2': faceIdUser });
-      // console.log(par);
+function checkUser( faceIdUsers ) {
+  var promesasMatches = [];
 
-      if (faceIdUser !== "-") {
-        $.ajax({
-            type: 'POST',
-            url: 'https://api.projectoxford.ai/face/v1.0/verify',
-            beforeSend: function (data) {
-            data.setRequestHeader("Content-Type", "application/json");
-            data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey );
-          },
-            dataType: "json",
-            contentType: "application/json",
-            data: par,
-            success: function (data) {
-              if( data.isIdentical === true ) {
-                alert('Wellcome again!');
-                // console.log('is identical');
-                //console.log(data);
-                // protagonist = element.name;
-                // speackFace( 'Conchita', momentSpeech + ' ' + protagonist ); 
-                // turnToHappy();
-              }
-            }
-        })
-        .fail(function (x) {
-          // console.log("error:"+x.statusText+x.responseText);
-        });
+  // console.log(faceIdUsers[0].url + " => " + faceIdUsers[0].faceId);
+  for (i = 1; i < faceIdUsers.length; i++) {
+    // console.log(faceIdUsers[i].url + " => " + faceIdUsers[i].faceId);
+    // Lanzamos la petición verify de Cognitive con promesa de comparar 2 caras
+    promesasMatches.push( compareUsers(faceIdUsers[0].faceId, faceIdUsers[i]) );     
+  }
+  
+  // Cuando se cumplen todas las peticiones verify de Cognitive y tenemos las comparaciones
+  Promise.all(promesasMatches).then(function(matches) {
+    for (i = 0; i < matches.length; i++) {
+      if (matches[i]) {
+        document.getElementById('photo').setAttribute('src', matches[i].url);
+        document.getElementById('photo').setAttribute('style', 'position: absolute; top: 0; left: 0; display: block;');
+        console.log("¡qué tal, " + matches[i].url + " !!");
+      } else {
+        // CARA NUEVA!!
       }
     }
   });
