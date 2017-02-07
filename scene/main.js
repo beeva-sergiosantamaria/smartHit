@@ -211,7 +211,7 @@ function faceDetectImage ( imageToSend ) {
       contentType: "application/octet-stream",
       data: imageToSend,
       success: function (data, textStatus, xhr) {
-        if (data[0].faceId !== 'undefined') {
+        if (data[0] !== 'undefined') {
           IdCara = data[0].faceId;
           console.log(IdCara);
           resolve(IdCara);
@@ -337,46 +337,44 @@ function faceDetectProcess( image ) {
 	speechRecognitionOn(); 
   var promesasFacesIds = [];
   // localStorage.removeItem('usuarios'); // (BORRAR)
-  // Recorremos la carpeta de imágenes
-  var url = window.location.href;
-  var lastSlashPos = url.lastIndexOf("/");
-  var dir = url.substring(0, lastSlashPos);
-  dir = dir + "/images/";
-  var ext = "png";
   
   // Si tenemos ya guardados los FaceIds de una detección anterior..
   var obsoleto = false;
   if (localStorage.usuarios && localStorage.hoy) {
+    // Será obsoleto si habiendo usuarios, hayan pasado ya más de 24h
     obsoleto = (Date.now() - (Number(localStorage.hoy)) > 86400000);
   } else {
+    // También será obsoleto SI NO HAY INFO de usuarios o fecha.
     obsoleto = true;
+    localStorage.removeItem('hoy');
     localStorage.removeItem('usuarios');
   }
   
   if (obsoleto) {
+    // Recorremos la carpeta de imágenes
+    var url = window.location.href;
+    var lastSlashPos = url.lastIndexOf("/");
+    var dir = url.substring(0, lastSlashPos);
+    dir = dir + "/images/";
+    var ext = "png";
     // Accedemos a la url de la carpeta de imágenes (pagina autogenerada por apache), 
     // obtenemos los enlaces de las imagenes y sacamos su info
     jQuery.ajax({url: dir}).then(function (html) {
       // Creamos un elemento DOM temporal
       var document = jQuery(html);
       var promesasImgData = [];
-
       // Por cada imagen PNG encontrada, pedimos la info de la image y guardamos la promesa
       document.find("a[href$='."+ext+"']").each(function () {
         var imageUrl = dir + jQuery(this).attr('href');
         // Lanzamos promesa de obtener la url de la imagen
         promesasImgData.push(getDataUri(imageUrl));
       });
-
       // Cuando tengo la info de todas las imágenes guardadas
       Promise.all(promesasImgData).then(function(dataImgUsers) {
-
         // AGREGAMOS LA IMAGEN DE LA WEBCAM al principio del array
         var camData = {'url': '--', 'raw': image};
         dataImgUsers.unshift(camData);
         var dataImgUser;
-        
-
         // Por cada imagen, obtenemos su faceId
         for (i = 0; i < dataImgUsers.length; i++) {
           dataImgUser = dataImgUsers[i];
@@ -384,7 +382,6 @@ function faceDetectProcess( image ) {
           // Lanzamos la petición con promesa de obtener un FaceId de la imagen
           promesasFacesIds.push( faceDetectImage(makeblob(dataImgUser.raw)) );
         }
-
         // Cuando se cumplen todas las peticiones y tenemos los FaceId de todas las img.. 
         Promise.all(promesasFacesIds).then(function(faceIdUsers) {
           // console.log(faceIdUsers);
@@ -395,23 +392,25 @@ function faceDetectProcess( image ) {
             // Guardamos las url y los faceId de los usuarios registrados
             usuarios.push({'url': dataImgUsers[i].url, 'faceId': faceIdUsers[i] });
           }
-          
+          // Almacenamos la fecha actual y los faceId obtenidos en el localStorage
           localStorage.hoy = Date.now();
           localStorage.usuarios = JSON.stringify(usuarios);
-          
+          // localStorage.cupo = (Number(localStorage.cupo)) + faceIdUsers.length
           // Comprobamos si el de la webcam es alguno de nuestros ususarios guardados
           checkUser( usuarios );
         });
       });
     });
   } else {
-    // Si no han pasado 24 horas, 
+    // Si no han pasado 24 horas, comparamos la nueva imagen de webCam con las imágenes ya guardadas.
     var usuariosAlmacenados = JSON.parse(localStorage.usuarios);
-    // Lanzamos la petición con promesa de obtener un FaceId de la imagen
+    // Lanzamos SOLAMENTE la petición con promesa de obtener un FaceId de la imagen de la webCam
     promesasFacesIds.push( faceDetectImage(makeblob(image)) );
     // Cuando se cumple la peticion y tenemos los FaceId de la img.. 
     Promise.all(promesasFacesIds).then(function(faceIdUsers) {
+      // Agregamos al array de usuarios el FaceId de la imagen de la webCam
       usuariosAlmacenados[0].faceId = faceIdUsers[0];
+      // Y comprobamos si el de la webcam es alguno de nuestros ususarios guardados
       checkUser( usuariosAlmacenados );
     });
   }
@@ -474,14 +473,12 @@ function compareUsers(faceIdCam, usuario) {
  */
 function checkUser( faceIdUsers ) {
   var promesasMatches = [];
-
   // console.log(faceIdUsers[0].url + " => " + faceIdUsers[0].faceId);
   for (i = 1; i < faceIdUsers.length; i++) {
     // console.log(faceIdUsers[i].url + " => " + faceIdUsers[i].faceId);
     // Lanzamos la petición verify de Cognitive con promesa de comparar 2 caras
     promesasMatches.push( compareUsers(faceIdUsers[0].faceId, faceIdUsers[i]) );     
   }
-  
   // Cuando se cumplen todas las peticiones verify de Cognitive y tenemos las comparaciones
   Promise.all(promesasMatches).then(function(matches) {
     for (i = 0; i < matches.length; i++) {
