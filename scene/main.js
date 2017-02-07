@@ -211,9 +211,9 @@ function faceDetectImage ( imageToSend ) {
       contentType: "application/octet-stream",
       data: imageToSend,
       success: function (data, textStatus, xhr) {
-        console.log(xhr.status);
         if (data[0].faceId !== 'undefined') {
           IdCara = data[0].faceId;
+          console.log(IdCara);
           resolve(IdCara);
         } else {
           resolve(false);
@@ -336,7 +336,7 @@ function makeblob(dataURL) {
 function faceDetectProcess( image ) {
 	speechRecognitionOn(); 
   var promesasFacesIds = [];
-  
+  // localStorage.removeItem('usuarios'); // (BORRAR)
   // Recorremos la carpeta de imágenes
   var url = window.location.href;
   var lastSlashPos = url.lastIndexOf("/");
@@ -345,13 +345,15 @@ function faceDetectProcess( image ) {
   var ext = "png";
   
   // Si tenemos ya guardados los FaceIds de una detección anterior..
-  if (facesIds.length > 0) {
-    // Comparamos la nueva cara de la webcam
-    var camData = {'url': '--', 'raw': image};
-    // Lanzamos la petición con promesa de obtener un FaceId de la imagen
-    promesasFacesIds.push( faceDetectImage(makeblob(image)) );
-    
+  var obsoleto = false;
+  if (localStorage.usuarios && localStorage.hoy) {
+    obsoleto = (Date.now() - (Number(localStorage.hoy)) > 86400000);
   } else {
+    obsoleto = true;
+    localStorage.removeItem('usuarios');
+  }
+  
+  if (obsoleto) {
     // Accedemos a la url de la carpeta de imágenes (pagina autogenerada por apache), 
     // obtenemos los enlaces de las imagenes y sacamos su info
     jQuery.ajax({url: dir}).then(function (html) {
@@ -391,16 +393,29 @@ function faceDetectProcess( image ) {
           usuarios.push(usuario);
           for (i = 1; i < faceIdUsers.length; i++) {
             // Guardamos las url y los faceId de los usuarios registrados
-            usuarios.push({'url': dataImgUsers[i].url, 'raw': dataImgUsers[i].raw, 'faceId': faceIdUsers[i] });
+            usuarios.push({'url': dataImgUsers[i].url, 'faceId': faceIdUsers[i] });
           }
+          
+          localStorage.hoy = Date.now();
+          localStorage.usuarios = JSON.stringify(usuarios);
+          
           // Comprobamos si el de la webcam es alguno de nuestros ususarios guardados
-          facesIds = usuarios;
           checkUser( usuarios );
         });
       });
     });
+  } else {
+    // Si no han pasado 24 horas, 
+    var usuariosAlmacenados = JSON.parse(localStorage.usuarios);
+    // Lanzamos la petición con promesa de obtener un FaceId de la imagen
+    promesasFacesIds.push( faceDetectImage(makeblob(image)) );
+    // Cuando se cumple la peticion y tenemos los FaceId de la img.. 
+    Promise.all(promesasFacesIds).then(function(faceIdUsers) {
+      usuariosAlmacenados[0].faceId = faceIdUsers[0];
+      checkUser( usuariosAlmacenados );
+    });
   }
-};
+}
 
 /**
  * Compara el FaceId de la web cam con la cara de una foto guardada
