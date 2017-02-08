@@ -336,7 +336,7 @@ function makeblob(dataURL) {
 function faceDetectProcess( image ) {
 	speechRecognitionOn(); 
   var promesasFacesIds = [];
-  // localStorage.removeItem('usuarios'); // (BORRAR)
+  // localStorage.removeItem('usuarios'); // (BORRAR) - DESCOMENTAR PARA RESETEAR
   
   // Si tenemos ya guardados los FaceIds de una detección anterior..
   var obsoleto = false;
