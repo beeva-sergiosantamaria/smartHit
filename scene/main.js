@@ -211,9 +211,9 @@ function faceDetectImage ( imageToSend ) {
       contentType: "application/octet-stream",
       data: imageToSend,
       success: function (data, textStatus, xhr) {
-        if (data[0] !== 'undefined') {
+        if (typeof data[0] !== 'undefined' && typeof data[0].faceId !== 'undefined') {
           IdCara = data[0].faceId;
-          console.log(IdCara);
+          console.log(Date.now() + ": " + xhr.status + " -> webCam: "+ IdCara);
           resolve(IdCara);
         } else {
           resolve(false);
@@ -336,7 +336,7 @@ function makeblob(dataURL) {
 function faceDetectProcess( image ) {
 	speechRecognitionOn(); 
   var promesasFacesIds = [];
-  // localStorage.removeItem('usuarios'); // (BORRAR)
+  // localStorage.removeItem('usuarios'); // (BORRAR) - DESCOMENTAR PARA RESETEAR
   
   // Si tenemos ya guardados los FaceIds de una detección anterior..
   var obsoleto = false;
@@ -395,9 +395,8 @@ function faceDetectProcess( image ) {
           // Almacenamos la fecha actual y los faceId obtenidos en el localStorage
           localStorage.hoy = Date.now();
           localStorage.usuarios = JSON.stringify(usuarios);
-          // localStorage.cupo = (Number(localStorage.cupo)) + faceIdUsers.length
           // Comprobamos si el de la webcam es alguno de nuestros ususarios guardados
-          checkUser( usuarios );
+          checkUser( usuarios, 1 );
         });
       });
     });
@@ -411,7 +410,7 @@ function faceDetectProcess( image ) {
       // Agregamos al array de usuarios el FaceId de la imagen de la webCam
       usuariosAlmacenados[0].faceId = faceIdUsers[0];
       // Y comprobamos si el de la webcam es alguno de nuestros ususarios guardados
-      checkUser( usuariosAlmacenados );
+      checkUser( usuariosAlmacenados, 1);
     });
   }
 }
@@ -424,7 +423,7 @@ function faceDetectProcess( image ) {
  */
 function compareUsers(faceIdCam, usuario) {
   var promise = new Promise(function (resolve, reject) {
-    $.ajax({
+    jQuery.ajax({
       type: 'POST',
       url: 'https://api.projectoxford.ai/face/v1.0/verify',
       beforeSend: function (data) {
@@ -435,16 +434,10 @@ function compareUsers(faceIdCam, usuario) {
       contentType: "application/json",
       data: JSON.stringify({'faceId1': faceIdCam, 'faceId2': usuario.faceId}),
       success: function(data, textStatus, xhr) {
-        console.log(xhr.status);
+        console.log(Date.now() + ": " + xhr.status + " -> verify: "+ "{'faceId1': "+faceIdCam+", 'faceId2': "+usuario.faceId+"} -> " + usuario.url);
         if (xhr.status === 200)  {
           if (data.isIdentical === true) {
             resolve(usuario);
-            // alert('Welcome back again, '+faceIdUsers[i].url+'!');
-            // console.log('is identical');
-            //console.log(data);
-            // protagonist = element.name;
-            // speackFace( 'Conchita', momentSpeech + ' ' + protagonist ); 
-            // turnToHappy();
           } else {
             resolve(false);
           }           
@@ -466,31 +459,52 @@ function compareUsers(faceIdCam, usuario) {
   return promise;
 }
 
+
+
 /**
- * Compara dos caras en Microsoft Cognitive Services (verify) 
- * @param {Array} faceIdUsers
+ * Compara dos caras en Microsoft Cognitive Services (verify) recursivamente
+ * @param {type} faceIdUsers
+ * @param {type} i
  * @returns {undefined}
  */
-function checkUser( faceIdUsers ) {
-  var promesasMatches = [];
-  // console.log(faceIdUsers[0].url + " => " + faceIdUsers[0].faceId);
-  for (i = 1; i < faceIdUsers.length; i++) {
-    // console.log(faceIdUsers[i].url + " => " + faceIdUsers[i].faceId);
-    // Lanzamos la petición verify de Cognitive con promesa de comparar 2 caras
-    promesasMatches.push( compareUsers(faceIdUsers[0].faceId, faceIdUsers[i]) );     
-  }
-  // Cuando se cumplen todas las peticiones verify de Cognitive y tenemos las comparaciones
-  Promise.all(promesasMatches).then(function(matches) {
-    for (i = 0; i < matches.length; i++) {
-      if (matches[i]) {
-        document.getElementById('photo').setAttribute('src', matches[i].url);
+function checkUser( faceIdUsers, i ) {
+  if (faceIdUsers.length > i) {
+    compareUsers(faceIdUsers[0].faceId, faceIdUsers[i++]).then(function(usuario) {
+      if (usuario) {
+        document.getElementById('photo').setAttribute('src', usuario.url);
         document.getElementById('photo').setAttribute('style', 'position: absolute; top: 0; left: 0; display: block;');
-        console.log("¡qué tal, " + matches[i].url + " !!");
+        console.log("¡qué tal, " + usuario.url + " !!");
+        // alert('Welcome back again, '+faceIdUsers[i].url+'!');
+        // console.log('is identical');
+        //console.log(data);
+        // protagonist = element.name;
+        // speackFace( 'Conchita', momentSpeech + ' ' + protagonist ); 
+        // turnToHappy();
       } else {
-        // CARA NUEVA!!
+        checkUser( faceIdUsers, i++ );
       }
-    }
-  });
+    });
+  }
+  
+//  var promesasMatches = [];
+//  // console.log(faceIdUsers[0].url + " => " + faceIdUsers[0].faceId);
+//  for (i = 1; i < faceIdUsers.length; i++) {
+//    // console.log(faceIdUsers[i].url + " => " + faceIdUsers[i].faceId);
+//    // Lanzamos la petición verify de Cognitive con promesa de comparar 2 caras
+//    promesasMatches.push( compareUsers(faceIdUsers[0].faceId, faceIdUsers[i]) );     
+//  }
+//  // Cuando se cumplen todas las peticiones verify de Cognitive y tenemos las comparaciones
+//  Promise.all(promesasMatches).then(function(matches) {
+//    for (i = 0; i < matches.length; i++) {
+//      if (matches[i]) {
+//        document.getElementById('photo').setAttribute('src', matches[i].url);
+//        document.getElementById('photo').setAttribute('style', 'position: absolute; top: 0; left: 0; display: block;');
+//        console.log("¡qué tal, " + matches[i].url + " !!");
+//      } else {
+//        // CARA NUEVA!! 
+//      }
+//    }
+//  });
 }
 
 function speackFace( Avatar, texto ){
