@@ -3,10 +3,10 @@ var camera, scene, renderer, JSONface, WomanJSONface, OBJface, controls, mixer, 
 	width = window.innerWidth, 
 	height = window.innerHeight;
 
-var womanSayAnimation, womanLeftEyeHappynimation, womanRightEyeHappynimation, womanHappyMouthLeftnimation, womanHappyMounthRightnimation, womanCloseLeftEyenimation, womanCloseRightEyenimation,
+var womanSayAnimation, womanSayUAnimation, womanLeftEyeHappynimation, womanRightEyeHappynimation, womanHappyMouthLeftnimation, womanHappyMounthRightnimation, womanCloseLeftEyenimation, womanCloseRightEyenimation,
 womanHappyMouthnimation, womanOpenLeftEyenimation, womanOpenRightEyenimation, womanCejaLeftUpnimation, womanCejaRightUpnimation, womanCejaLeftDownnimation, womanCejaRightDownnimation, womanSadMounthnimation;
 
-var womanSayAplayer, womanLeftEyeHappyplayer, womanRightEyeHappyplayer, womanHappyMouthLeftplayer, womanHappyMounthRightplayer, womanCloseLeftEyeplayer, womanCloseRightEyeplayer,
+var womanSayAplayer, womanSayUplayer, womanLeftEyeHappyplayer, womanRightEyeHappyplayer, womanHappyMouthLeftplayer, womanHappyMounthRightplayer, womanCloseLeftEyeplayer, womanCloseRightEyeplayer,
 womanHappyMouthplayer, womanOpenLeftEyeplayer, womanOpenRightEyeplayer, womanCejaLeftUpplayer, womanCejaRightUpplayer, womanCejaLeftDownplayer, womanCejaRightDownplayer, womanSadMounthplayer;
 
 var trackerActive = false;	
@@ -19,6 +19,8 @@ var manager = new THREE.LoadingManager();
 
 var moment = new Date().getHours();
 
+//https://github.com/beeva-labs/vowelsegmentation
+
 if( moment >= 7 && moment < 14 ) var momentSpeech = 'buenos dias';
 else if( moment >= 14 && moment < 20 ) var momentSpeech = 'buenas tardes';
 else if( moment >= 20 && moment < 7 ) var momentSpeech = 'buenas noches';
@@ -26,19 +28,6 @@ else if( moment >= 20 && moment < 7 ) var momentSpeech = 'buenas noches';
 $( document ).ready(function() {
 	initRender();
 	animate();
-
-	$.ajax({
-	    type: 'POST',
-	    url: 'https://tz05nf4cld.execute-api.eu-west-1.amazonaws.com/prod/vowelsegmentation',
-	    data: JSON.stringify( { text: 'hola sergio' }),
-	    contentType: "application/json",
-	    success: function (data) {
-	    	console.log(data);
-	    }
-	})
-	.fail(function (x) {
-	    console.log("error");
-	});
 });
 
 function initRender() {
@@ -105,6 +94,7 @@ function womanFaceAnimated(){
 		womanMixer = new THREE.AnimationMixer( WomanJSONface );
 
 		womanSayAnimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'a', sayA, 15, false );
+		womanSayUAnimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'u', sayU, 15, false );
 		womanLeftEyeHappynimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'leftEyeHappy', leftEyeHappy, 15, false );
 		womanRightEyeHappynimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'rightEyeHappy', rightEyeHappy, 15, false );
 		womanHappyMouthLeftnimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'happyMouthLeft', happyMouthLeft, 15, false );
@@ -121,6 +111,7 @@ function womanFaceAnimated(){
 		womanSadMounthnimation = THREE.AnimationClip.CreateFromMorphTargetSequence( 'sadMounth', sadMounth, 15, false );
 
 		womanSayAplayer = womanMixer.clipAction( womanSayAnimation ).setDuration( 0.5 );
+		womanSayUplayer = womanMixer.clipAction( womanSayUAnimation ).setDuration( 0.5 );
 		womanLeftEyeHappyplayer = womanMixer.clipAction( womanLeftEyeHappynimation ).setDuration( 0.5 );
 		womanRightEyeHappyplayer = womanMixer.clipAction( womanRightEyeHappynimation ).setDuration( 0.5 );
 		womanHappyMouthLeftplayer = womanMixer.clipAction( womanHappyMouthLeftnimation ).setDuration( 0.5 );
@@ -254,7 +245,7 @@ function checkUser( id ){
 		    	if( data.isIdentical == true ) { 
 		    		console.log('is identical');
 		    		protagonist = element.name;
-					speackFace( 'Conchita', momentSpeech + ' ' + protagonist ); 
+		    		vowelSegmentation(momentSpeech + ' ' + protagonist);
 					turnToHappy();
 				}	
 		    }
@@ -265,7 +256,35 @@ function checkUser( id ){
 	})
 }
 
-function speackFace( Avatar, texto ){
+function vowelSegmentation(texto){
+	$.ajax({
+	    type: 'POST',
+	    url: 'https://tz05nf4cld.execute-api.eu-west-1.amazonaws.com/prod/vowelsegmentation',
+	    data: JSON.stringify( { text: texto }),
+	    contentType: "application/json",
+	    success: function (data) {
+	    	//console.log(data);
+	    	speackFace( 'Conchita', texto, data ); 
+	    }
+	})
+	.fail(function (x) {
+	    console.log("error");
+	});
+}
+
+var sayAFunction = function sayAPlay(){
+	womanSayAplayer.play();
+	womanSayAplayer.loop = THREE.LoopPingPong;
+	womanSayAplayer.repetitions = 0;
+}
+
+
+var sayUFunction = function sayUPlay(){
+	womanSayUplayer.play();
+	womanSayUplayer.loop = THREE.LoopPingPong;
+	womanSayUplayer.repetitions = 0;
+}
+function speackFace( Avatar, texto, vowel ){
 
 	Avatar = ( Avatar == undefined ) ? 'Conchita' : Avatar;
 	texto = ( texto == undefined ) ? 'buenos dias, ¿en qué puedo servirte?' : texto;
@@ -278,12 +297,28 @@ function speackFace( Avatar, texto ){
 		 data: JSON.stringify( { voice: Avatar, text: texto} ),
 		 contentType: "application/json",
 		 success: function(data){
-		 	if( WomanJSONface != undefined )  { setTimeout( womanSayAplayer.play(), 600); }; 
+		 	//if( WomanJSONface != undefined )  { setTimeout( womanSayAplayer.play(), 600); }; 
+		 	$.each( vowel, function(index, element) {
+
+		 		if( element[0] == 'a' || element[0] == 'i' ){
+		 			womanSayAplayer.play();
+					womanSayAplayer.loop = THREE.LoopOnce;
+					womanSayAplayer.repetitions = 0;
+					console.log('es a/i');
+		 		}
+		 		/*if( element[0] == 'e' || element[0] == 'o' || element[0] == 'u' ){
+		 			womanSayUplayer.play();
+					womanSayUplayer.loop = THREE.LoopPingPong;
+					womanSayUplayer.repetitions = 0;
+					console.log('es e/o');
+		 		}*/
+		 	})
+
 		   	audio = new Audio( data.voice );
         	audio.play();
+
 			audio.addEventListener('ended', function(){
 				if( WomanJSONface != undefined ){
-				    womanSayAplayer.stop();
 				    recognition.start();
 				    setTimeout( function(){ stopAllAnims() }, 2000 );
 				}
@@ -303,7 +338,7 @@ function speechRecognitionOn(){
 	  recognition.lang = "es-ES";
 	  //recognition.start();
 
-	  recognition.onstart = function() { console.log('start recognition'); }
+	  recognition.onstart = function() { /*console.log('start recognition');*/ }
 	  recognition.onresult = function(event) { 
 	  		console.log(event);
 	  		for (var i = event.resultIndex; i < event.results.length; ++i) {
@@ -329,7 +364,7 @@ function speechRecognitionOn(){
 		    }
 	  }
 	  recognition.onerror = function(event) {  }
-	  recognition.onend = function() {  console.log('stop recognition'); recognition.start(); }
+	  recognition.onend = function() {  /*console.log('stop recognition');*/ recognition.start(); }
 	}  
 };
 
@@ -415,12 +450,13 @@ function turnToHungry(){
 
 }
 
+function stopMounthAnimations(){
+	womanSayAplayer.stop();
+	womanSayUplayer.stop();
+}
+
 function stopAllAnims(){
 	console.log('llama a stop anims');
-	womanSayAplayer.stop();
-	/*sayEplayer.stop();
-	sayOplayer.stop();
-	sayIplayer.stop();*/
 	womanLeftEyeHappyplayer.stop();
 	womanRightEyeHappyplayer.stop();
 	womanHappyMouthLeftplayer.stop();
@@ -467,9 +503,17 @@ $(document).on("keydown", function (e) {
 			turnToHappy();
 	    }
 	    else if (e.keyCode == '40') { // DOWN
-	    	turnToSad();
+	    	womanSayAplayer.play();
+			setTimeout(function(){ 
+				womanSayAplayer.paused = true;  
+			}, 100);
 	    }
 	    else if (e.keyCode == '37') { // LEFT
+			womanSayUplayer.play();
+			setTimeout(function(){ 
+				womanSayUplayer.paused = true;  
+			}, 100);
+
 	    	/*cejaIzqUpPlayer.play();
 			setTimeout(function(){ cejaIzqUpPlayer.paused = true; }, 100);*/
 	    }
