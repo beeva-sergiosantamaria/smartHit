@@ -1,2 +1,2 @@
-# VR Labs experiment
+# VR Labs Project
 
