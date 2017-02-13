@@ -1,3 +1,4 @@
+var facesIds = [];
 
 var camera, scene, renderer, JSONface, WomanJSONface, OBJface, controls, mixer, womanMixer, clip, audio, recognition, protagonist,
 	width = window.innerWidth, 
@@ -28,6 +29,18 @@ else if( moment >= 20 && moment < 7 ) var momentSpeech = 'buenas noches';
 $( document ).ready(function() {
 	initRender();
 	animate();
+	$.ajax({
+	    type: 'POST',
+	    url: 'https://tz05nf4cld.execute-api.eu-west-1.amazonaws.com/prod/vowelsegmentation',
+	    data: JSON.stringify( { text: 'hola sergio' }),
+	    contentType: "application/json",
+	    success: function (data) {
+	    	// console.log(data);
+	    }
+	})
+	.fail(function (x) {
+	    console.log("error");
+	});
 });
 
 function initRender() {
@@ -166,81 +179,91 @@ function initTracker(){
 		if(faceStatusEvent.status == 'found'){
 
 			canvasInput.getContext('2d').drawImage(videoInput, 0, 0, 320, 240);
-		    var dataCaptured = canvasInput.toDataURL("image/png").replace("image/png", "image/octet-stream");
-		    document.getElementById('photo').setAttribute('src', dataCaptured);
-
-		  	movement({ opacity: 1 }, WomanJSONface.material, 0, 1000, TWEEN.Easing.Quartic.Out );
-		  	movement({ x: 1 , y: 1, z: 1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
-			setTimeout(function(){ faceDetectProcess( dataCaptured ); }, 500); 
+      var dataCaptured = canvasInput.toDataURL("image/png").replace("image/png", "image/octet-stream");
+      document.getElementById('photo').setAttribute('src', dataCaptured);
+      
+      movement({ opacity: 1 }, WomanJSONface.material, 0, 1000, TWEEN.Easing.Quartic.Out );
+      movement({ x: 1 , y: 1, z: 1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
+			setTimeout(function(){ faceDetectProcess( dataCaptured ); }, 0); 
 		}
 		else {
 			movement({ opacity: 0 }, WomanJSONface.material, 0, 1000, TWEEN.Easing.Quartic.Out );
-		  	movement({ x: 0.1 , y: 0.1, z: 0.1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
+      movement({ x: 0.1 , y: 0.1, z: 0.1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
 		}
 	}, true);
 }
 
-function faceDetectProcess( image ) {
-
-	speechRecognitionOn(); 
-
-	var makeblob = function (dataURL) {
-        var BASE64_MARKER = ';base64,';
-        if (dataURL.indexOf(BASE64_MARKER) == -1) {
-            var parts = dataURL.split(',');
-            var contentType = parts[0].split(':')[1];
-            var raw = decodeURIComponent(parts[1]);
-            return new Blob([raw], { type: contentType });
+/**
+ * Petición a Microsoft Cognitive Services (Detect) para detectar una cara a partir de una imagen RAW
+ * Límites: 30,000 transactions per month, 20 per minute.
+ * 
+ * @param {type} imageToSend
+ * @returns {faceDetectImage.promise|faceDetectImage.promise.mainfaceDetectImage#promise}
+ */
+function faceDetectImage ( imageToSend ) {
+  
+  var promise = new Promise(function (resolve, reject) {
+    jQuery.ajax({
+      type: 'POST',
+      url: 'https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=true&returnFaceAttributes=age,gender,facialHair',
+      beforeSend: function (data) {
+        data.setRequestHeader("Content-Type", "application/octet-stream");
+        data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey);
+      },
+      processData: false,
+      contentType: "application/octet-stream",
+      data: imageToSend,
+      success: function (data, textStatus, xhr) {
+        if (typeof data[0] !== 'undefined' && typeof data[0].faceId !== 'undefined') {
+          IdCara = data[0].faceId;
+          console.log(Date.now() + ": " + xhr.status + " -> webCam: "+ IdCara);
+          resolve(IdCara);
+        } else {
+          resolve(false);
         }
-        var parts = dataURL.split(BASE64_MARKER);
-        var contentType = parts[0].split(':')[1];
-        var raw = window.atob(parts[1]);
-        var rawLength = raw.length;
-
-        var uInt8Array = new Uint8Array(rawLength);
-
-        for (var i = 0; i < rawLength; ++i) {
-            uInt8Array[i] = raw.charCodeAt(i);
+      },
+      statusCode: {
+        429: function() {
+          console.log("429 - RateLimitExceeded on Detect request: Rate limit is exceeded. Try again later. 30,000 transactions per month, 20 per minute");
+          resolve(false);
         }
+      }
+    });
+//    .fail(function (x) {
+//      // console.log("error detect: " + x.responseText);
+//      resolve(false);
+//      // reject(new Error("error: "+x));
+//    });
+  });
+  return promise;
+}
 
-        return new Blob([uInt8Array], { type: contentType });
-    }
-
-    var imageToSend = makeblob ( image );
-
-	$.ajax({
-	    type: 'POST',
-	    url: 'https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=true&returnFaceAttributes=age,gender,facialHair',
-	    beforeSend: function (data) {
-			data.setRequestHeader("Content-Type", "application/octet-stream");
-			data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey );
-		},
-    	processData: false,
-	    contentType: "application/octet-stream",
-	    data: imageToSend,
-	    success: function (data) {
-	    	console.log( data[0].faceId );
-	    	checkUser( data[0].faceId );
-	    }
-	})
-	.fail(function (x) {
-	    console.log("error:"+x.statusText+x.responseText);
-	});
-};
-
-function checkUser( id ){
-
-	$.each( members, function(index, element) {
-		$.ajax({
+/**
+ * Petición a Microsoft Cognitive Services (Detect) para detectar una cara a partir de una URL válida
+ * Límites: 30,000 transactions per month, 20 per minute.
+ * 
+ * @param {String} url
+ * @returns {faceDetectImageUrl.promise|faceDetectImageUrl.promise.mainfaceDetectImageUrl#promise}
+ */
+function faceDetectImageUrl (url) {
+  var urlData = new Object();
+  // urlData.url = "http://ghk.h-cdn.co/assets/16/04/480x596/paul-newman-1960.jpg";
+  urlData.url = url;   
+  var data = JSON.stringify(urlData);
+  // console.log(data);
+	var promise = new Promise(function (resolve, reject) {
+		jQuery.ajax({
 		    type: 'POST',
-		    url: 'https://api.projectoxford.ai/face/v1.0/verify',
+		    async: false,
+		    url: 'https://api.projectoxford.ai/face/v1.0/detect?returnFaceId=true&returnFaceLandmarks=true&returnFaceAttributes=age,gender,facialHair',
 		    beforeSend: function (data) {
-				data.setRequestHeader("Content-Type", "application/json");
-				data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey );
-			},
-		    dataType: "json",
+		    data.setRequestHeader("Content-Type", "application/json");
+		    data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey );
+		  },
+		    processData: false,
 		    contentType: "application/json",
-		    data: JSON.stringify({ 'faceId1': element.id, 'faceId2': id }),
+		    dataType: "json",
+		    data: data,
 		    success: function (data) {
 		    	if( data.isIdentical == true ) { 
 		    		console.log('is identical');
@@ -248,12 +271,249 @@ function checkUser( id ){
 		    		vowelSegmentation(momentSpeech + ' ' + protagonist);
 					turnToHappy();
 				}	
+		      console.log( data[0].faceId );
+		      IdCara = data[0].faceId;
 		    }
 		})
 		.fail(function (x) {
-		    console.log("error:"+x.statusText+x.responseText);
+		  console.log("error:"+x.statusText+x.responseText);
 		});
-	})
+	});
+  return promise;
+}
+
+/**
+ * Obtiene los datos de una imagen a partir de una url una vez cargada (asíncrona).
+ * @see https://davidwalsh.name/convert-image-data-uri-javascript
+ * 
+ * @param {type} url
+ * @returns {getDataUri.promise|getDataUri.promise.maingetDataUri#promise}
+ */
+function getDataUri(url ) {
+  var image = new Image();
+  var promise = new Promise(function (resolve, reject) {
+    image.onload = function () {
+      var canvas = document.createElement('canvas');
+      canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
+      canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
+      canvas.getContext('2d').drawImage(this, 0, 0);
+      // Get raw image data
+      resolve( {"url": url, "raw": canvas.toDataURL('image/png')} );
+    };
+
+    if (!image) {
+      reject(new Error('No existe la imagen'));
+    }
+  });
+
+  image.src = url;
+  return promise;
+}
+
+/**
+ * Comvierte a Blob la info RAW de una imagen
+ * @param {String} dataURL
+ * @returns {Blob}
+ */
+function makeblob(dataURL) {
+  var BASE64_MARKER = ';base64,';
+  if (dataURL.indexOf(BASE64_MARKER) === -1) {
+    var parts = dataURL.split(',');
+    var contentType = parts[0].split(':')[1];
+    var raw = decodeURIComponent(parts[1]);
+    return new Blob([raw], { type: contentType });
+  }
+  var parts = dataURL.split(BASE64_MARKER);
+  var contentType = parts[0].split(':')[1];
+  var raw = window.atob(parts[1]);
+  var rawLength = raw.length;
+
+  var uInt8Array = new Uint8Array(rawLength);
+
+  for (var i = 0; i < rawLength; ++i) {
+      uInt8Array[i] = raw.charCodeAt(i);
+  }
+
+  return new Blob([uInt8Array], { type: contentType });
+}
+
+/**
+ * Proceso de detección de un usuario entre las imágenes guardadas
+ * @param {String} image
+ * @returns {undefined}
+ */
+function faceDetectProcess( image ) {
+	speechRecognitionOn(); 
+  var promesasFacesIds = [];
+  // localStorage.removeItem('usuarios'); // (BORRAR) - DESCOMENTAR PARA RESETEAR
+  
+  // Si tenemos ya guardados los FaceIds de una detección anterior..
+  var obsoleto = false;
+  if (localStorage.usuarios && localStorage.hoy) {
+    // Será obsoleto si habiendo usuarios, hayan pasado ya más de 24h
+    obsoleto = (Date.now() - (Number(localStorage.hoy)) > 86400000);
+  } else {
+    // También será obsoleto SI NO HAY INFO de usuarios o fecha.
+    obsoleto = true;
+    localStorage.removeItem('hoy');
+    localStorage.removeItem('usuarios');
+  }
+  
+  if (obsoleto) {
+    // Recorremos la carpeta de imágenes
+    var url = window.location.href;
+    var lastSlashPos = url.lastIndexOf("/");
+    var dir = url.substring(0, lastSlashPos);
+    dir = dir + "/images/";
+    var ext = "png";
+    // Accedemos a la url de la carpeta de imágenes (pagina autogenerada por apache), 
+    // obtenemos los enlaces de las imagenes y sacamos su info
+    jQuery.ajax({url: dir}).then(function (html) {
+      // Creamos un elemento DOM temporal
+      var document = jQuery(html);
+      var promesasImgData = [];
+      // Por cada imagen PNG encontrada, pedimos la info de la image y guardamos la promesa
+      document.find("a[href$='."+ext+"']").each(function () {
+        var imageUrl = dir + jQuery(this).attr('href');
+        // Lanzamos promesa de obtener la url de la imagen
+        promesasImgData.push(getDataUri(imageUrl));
+      });
+      // Cuando tengo la info de todas las imágenes guardadas
+      Promise.all(promesasImgData).then(function(dataImgUsers) {
+        // AGREGAMOS LA IMAGEN DE LA WEBCAM al principio del array
+        var camData = {'url': '--', 'raw': image};
+        dataImgUsers.unshift(camData);
+        var dataImgUser;
+        // Por cada imagen, obtenemos su faceId
+        for (i = 0; i < dataImgUsers.length; i++) {
+          dataImgUser = dataImgUsers[i];
+          // Por cada img, pedimos su FaceId y guardamos la promesa
+          // Lanzamos la petición con promesa de obtener un FaceId de la imagen
+          promesasFacesIds.push( faceDetectImage(makeblob(dataImgUser.raw)) );
+        }
+        // Cuando se cumplen todas las peticiones y tenemos los FaceId de todas las img.. 
+        Promise.all(promesasFacesIds).then(function(faceIdUsers) {
+          // console.log(faceIdUsers);
+          var usuarios = [];
+          var usuario = {'url': '--', 'faceId': faceIdUsers[0]};
+          usuarios.push(usuario);
+          for (i = 1; i < faceIdUsers.length; i++) {
+            // Guardamos las url y los faceId de los usuarios registrados
+            usuarios.push({'url': dataImgUsers[i].url, 'faceId': faceIdUsers[i] });
+          }
+          // Almacenamos la fecha actual y los faceId obtenidos en el localStorage
+          localStorage.hoy = Date.now();
+          localStorage.usuarios = JSON.stringify(usuarios);
+          // Comprobamos si el de la webcam es alguno de nuestros ususarios guardados
+          checkUser( usuarios, 1 );
+        });
+      });
+    });
+  } else {
+    // Si no han pasado 24 horas, comparamos la nueva imagen de webCam con las imágenes ya guardadas.
+    var usuariosAlmacenados = JSON.parse(localStorage.usuarios);
+    // Lanzamos SOLAMENTE la petición con promesa de obtener un FaceId de la imagen de la webCam
+    promesasFacesIds.push( faceDetectImage(makeblob(image)) );
+    // Cuando se cumple la peticion y tenemos los FaceId de la img.. 
+    Promise.all(promesasFacesIds).then(function(faceIdUsers) {
+      // Agregamos al array de usuarios el FaceId de la imagen de la webCam
+      usuariosAlmacenados[0].faceId = faceIdUsers[0];
+      // Y comprobamos si el de la webcam es alguno de nuestros ususarios guardados
+      checkUser( usuariosAlmacenados, 1);
+    });
+  }
+}
+
+/**
+ * Compara el FaceId de la web cam con la cara de una foto guardada
+ * @param {String} faceIdCam
+ * @param {JSON} usuario
+ * @returns {compareUsers.promise.maincompareUsers#promise|compareUsers.promise}
+ */
+function compareUsers(faceIdCam, usuario) {
+  var promise = new Promise(function (resolve, reject) {
+    jQuery.ajax({
+      type: 'POST',
+      url: 'https://api.projectoxford.ai/face/v1.0/verify',
+      beforeSend: function (data) {
+        data.setRequestHeader("Content-Type", "application/json");
+        data.setRequestHeader("Ocp-Apim-Subscription-Key", microsoftAPIfaceKey);
+      },
+      dataType: "json",
+      contentType: "application/json",
+      data: JSON.stringify({'faceId1': faceIdCam, 'faceId2': usuario.faceId}),
+      success: function(data, textStatus, xhr) {
+        console.log(Date.now() + ": " + xhr.status + " -> verify: "+ "{'faceId1': "+faceIdCam+", 'faceId2': "+usuario.faceId+"} -> " + usuario.url);
+        if (xhr.status === 200)  {
+          if (data.isIdentical === true) {
+            resolve(usuario);
+          } else {
+            resolve(false);
+          }           
+        } else {
+          console.log("estado verify: "+xhr.status)
+          resolve(false);
+        }
+      },
+      statusCode: {
+        429: function() {
+          console.log("429 - RateLimitExceeded on Verify: Rate limit is exceeded. Try again later. 30,000 transactions per month, 20 per minute");
+        }
+      }
+    })
+    .fail(function (x, textStatus, xhr) {
+      // console.log("error verify: "+x);
+    });
+  });
+  return promise;
+}
+
+
+
+/**
+ * Compara dos caras en Microsoft Cognitive Services (verify) recursivamente
+ * @param {type} faceIdUsers
+ * @param {type} i
+ * @returns {undefined}
+ */
+function checkUser( faceIdUsers, i ) {
+  if (faceIdUsers.length > i) {
+    compareUsers(faceIdUsers[0].faceId, faceIdUsers[i++]).then(function(usuario) {
+      if (usuario) {
+        document.getElementById('photo').setAttribute('src', usuario.url);
+        document.getElementById('photo').setAttribute('style', 'position: absolute; top: 0; left: 0; display: block;');
+        console.log("¡qué tal, " + usuario.url + " !!");
+        // alert('Welcome back again, '+faceIdUsers[i].url+'!');
+        // console.log('is identical');
+        //console.log(data);
+        // protagonist = element.name;
+        // speackFace( 'Conchita', momentSpeech + ' ' + protagonist ); 
+        // turnToHappy();
+      } else {
+        checkUser( faceIdUsers, i++ );
+      }
+    });
+  }
+  
+//  var promesasMatches = [];
+//  // console.log(faceIdUsers[0].url + " => " + faceIdUsers[0].faceId);
+//  for (i = 1; i < faceIdUsers.length; i++) {
+//    // console.log(faceIdUsers[i].url + " => " + faceIdUsers[i].faceId);
+//    // Lanzamos la petición verify de Cognitive con promesa de comparar 2 caras
+//    promesasMatches.push( compareUsers(faceIdUsers[0].faceId, faceIdUsers[i]) );     
+//  }
+//  // Cuando se cumplen todas las peticiones verify de Cognitive y tenemos las comparaciones
+//  Promise.all(promesasMatches).then(function(matches) {
+//    for (i = 0; i < matches.length; i++) {
+//      if (matches[i]) {
+//        document.getElementById('photo').setAttribute('src', matches[i].url);
+//        document.getElementById('photo').setAttribute('style', 'position: absolute; top: 0; left: 0; display: block;');
+//        console.log("¡qué tal, " + matches[i].url + " !!");
+//      } else {
+//        // CARA NUEVA!! 
+//      }
+//    }
+//  });
 }
 
 function vowelSegmentation(texto){
