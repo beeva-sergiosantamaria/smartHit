@@ -601,7 +601,7 @@ $(document).on("keyup", function (e) {
 
 function WebSocketTest()
 {
-   var socket = io.connect('http://localhost:3031', { 'forceNew': true } );
+   var socket = io.connect('https://damp-forest-64170.herokuapp.com:3031/', { 'forceNew': true } );
    socket.on('messages', function(data){
    		console.log(data);
    })
