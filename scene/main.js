@@ -41,13 +41,13 @@ else if( moment >= 14 && moment < 20 ) var momentSpeech = 'buenas tardes';
 else var momentSpeech = 'buenas noches';
 
 $( document ).ready(function() {
-	//getUserFaces();
+	getUserFaces();
 	WebSocketTest();
 });
 
 function getUserFaces(){
 	 $.ajax({
-        url: 'http://localhost:3000/faces/faceCollection',
+        url: 'http://ec2-52-31-73-229.eu-west-1.compute.amazonaws.com:3000/faces/faceCollection',
         dataType: "jsonp",
         success: function(data) {
         	console.log( 'datos recibidos: ', data );
@@ -329,7 +329,7 @@ function welcomeResponse( intent, value ){
 	    	protagonist.name = value;
 	    	$.ajax({
 			    type: 'POST',
-			    url: 'http://localhost:3000/faces/faceCollection',
+			    url: 'http://ec2-52-31-73-229.eu-west-1.compute.amazonaws.com:3000/faces/faceCollection',
         		contentType: 'application/json',
 			    data: JSON.stringify({'name': protagonist.name, 'id': protagonist.id, 'timeMoment': registerTime }),
 			    success: function (data) {
@@ -601,10 +601,10 @@ $(document).on("keyup", function (e) {
 
 function WebSocketTest()
 {
-   var socket = io.connect('https://damp-forest-64170.herokuapp.com:3031/', { 'forceNew': true } );
-   socket.on('messages', function(data){
-   		console.log(data);
-   })
+   var socket = io.connect('http://ec2-52-31-73-229.eu-west-1.compute.amazonaws.com:3031/', { 'forceNew': true } );
+   	   socket.on('messages', function(data){
+   			console.log(data);
+   	   })
 
    socket.emit('messagesReturn', { id:1, author: 'sergio sant', libro: 'el arte del lolailo' });
 }
