@@ -10,9 +10,17 @@
 		<meta name="mobile-web-app-capable" content="yes">
 	</head>
 	<body class="darkBack">
-		<div id="container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 999"></div>
+		<div id="container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 990"></div>
 		<canvas id="inputCanvas" width="320" height="240" style="position: absolute; top: 0; right: 0; display: none"></canvas>
 		<video id="inputVideo" autoplay loop style="display: none"></video>
+		<fieldset>
+		  <input type="checkbox" id="stark">
+		  <label for="stark">Stark</label>
+		  <input type="checkbox" id="lannister">
+		  <label for="lannister">Lannister</label>
+		  <input type="checkbox" id="baratheon">
+		  <label for="baratheon">Baratheon</label>
+		</fieldset>
 		<script type="text/javascript" src="scene/variables.js"></script>
 		<script type="text/javascript" src="libs/jquery-2.1.0.min.js"></script>
 		<script type="text/javascript" src="libs/socket.io.js"></script>

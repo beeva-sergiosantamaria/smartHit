@@ -42,7 +42,6 @@ else var momentSpeech = 'buenas noches';
 
 $( document ).ready(function() {
 	getUserFaces();
-	WebSocketTest();
 });
 
 function getUserFaces(){
@@ -136,7 +135,6 @@ function initTracker(){
 	document.addEventListener('headtrackrStatus', function( faceStatusEvent ){
 		if( functionality == 'welcome' ) {	
 			if(faceStatusEvent.status == 'found'){
-				console.log('datos al inicio: ', functionality, trackerActive);
 				canvasInput.getContext('2d').drawImage(videoInput, 0, 0, 320, 240);
 			    var dataCaptured = canvasInput.toDataURL("image/png").replace("image/png", "image/octet-stream");
 			    //document.getElementById('photo').setAttribute('src', dataCaptured);
@@ -302,7 +300,10 @@ function speechRecognitionOn(){
 						        break;
 					  	 	case 'weather':
 						   		weatherResponse( response.entities.intent[0].value, nameValue );
-						        break;   
+						        break;
+						    case 'game':
+						   		weatherResponse( response.entities.intent[0].value, nameValue );
+						        break;       
 					  	}
 				}
 		    });
@@ -324,6 +325,13 @@ function welcomeResponse( intent, value ){
 		  	movement({ x: 0.1 , y: 0.1, z: 0.1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
 		  	getLocation();
 	        break;
+	    case 'jugar':
+	    	functionality = 'game';
+	    	console.log('juego iniciado');
+			movement({ opacity: 0 }, WomanJSONface.material, 0, 1000, TWEEN.Easing.Quartic.Out );
+		  	movement({ x: 0.1 , y: 0.1, z: 0.1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
+			WebSocketTest();
+	        break;    
 	    case 'nombre':
 	    	console.log('nombre solicitado');
 	    	protagonist.name = value;
@@ -362,6 +370,22 @@ function weatherResponse(intent, valuie){
 		  	speackFace('Conchita', '¿deseas algo mas, ' + protagonist.name + '?.' );
 	    	console.log('salir widget tiempo');
 	    	eraseScena();
+	        break;
+	}
+};
+
+function gameResponse(intent, valuie){
+	switch(intent) {  
+	    case 'home':
+	    	functionality = 'welcome';
+	    	movement({ opacity: 1 }, WomanJSONface.material, 0, 1000, TWEEN.Easing.Quartic.Out );
+		  	movement({ x: 1 , y: 1, z: 1 }, WomanJSONface.scale, 0, 2000, TWEEN.Easing.Quartic.Out );
+		  	speackFace('Conchita', '¿deseas algo mas, ' + protagonist.name + '?.' );
+	    	console.log('salir widget juego');
+	    	$('#stark').removeAttr('checked');
+	    	$('#lannister').removeAttr('checked');
+	    	$('#baratheon').removeAttr('checked');
+	    	$('fieldset').css('opacity',0);
 	        break;
 	}
 };
@@ -601,10 +625,10 @@ $(document).on("keyup", function (e) {
 
 function WebSocketTest()
 {
-   var socket = io.connect('http://ec2-52-31-73-229.eu-west-1.compute.amazonaws.com:3031/', { 'forceNew': true } );
-   	   socket.on('messages', function(data){
+	$('fieldset').css('opacity',1);
+   	var socket = io.connect('http://ec2-52-31-73-229.eu-west-1.compute.amazonaws.com:3031/', { 'forceNew': true } );
+   	   	socket.on('toSmartMirror', function(data){
    			console.log(data);
-   	   })
-
-   socket.emit('messagesReturn', { id:1, author: 'sergio sant', libro: 'el arte del lolailo' });
+   			$('#'+data.objeto).attr('checked','checked');
+   	   	})
 }
