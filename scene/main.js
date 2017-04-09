@@ -600,7 +600,7 @@ function startGame(){
 	//meteoGen('lluvia', 10);
 	lightSet( 0xffffaa, { 'x': 1.5, 'y': 1.4, 'z': 2.65 } );
 	lightSet( 0xffffaa, { 'x': -2.24, 'y': 2.1, 'z': -7.97 } );
-	WebSocketTest();
+	//WebSocketTest();
 	$(".mainClock").css("opacity", 1);
     fxSounds["wind"].play();
 
