@@ -94,7 +94,7 @@ $( document ).ready(function() {
 
 function getUserFaces(){
 	 $.ajax({
-        url: 'https://ec2-52-31-73-229.eu-west-1.compute.amazonaws.com:3000/faces/faceCollection',
+        url: 'http://ec2-52-31-73-229.eu-west-1.compute.amazonaws.com:3000/faces/faceCollection',
         dataType: "jsonp",
         success: function(data) {
         	console.log('datos almacenados ya recogidos!');
@@ -371,7 +371,7 @@ function welcomeResponse( intent, value ){
 		    	protagonist.name = value;
 		    	$.ajax({
 				    type: 'POST',
-				    url: 'https://ec2-52-31-73-229.eu-west-1.compute.amazonaws.com:3000/faces/faceCollection',
+				    url: 'http://ec2-52-31-73-229.eu-west-1.compute.amazonaws.com:3000/faces/faceCollection',
 	        		contentType: 'application/json',
 				    data: JSON.stringify({'name': protagonist.name, 'id': protagonist.id, 'timeMoment': registerTime }),
 				    success: function (data) {
@@ -600,7 +600,7 @@ function startGame(){
 	//meteoGen('lluvia', 10);
 	lightSet( 0xffffaa, { 'x': 1.5, 'y': 1.4, 'z': 2.65 } );
 	lightSet( 0xffffaa, { 'x': -2.24, 'y': 2.1, 'z': -7.97 } );
-	//WebSocketTest();
+	WebSocketTest();
 	$(".mainClock").css("opacity", 1);
     fxSounds["wind"].play();
 
@@ -801,7 +801,7 @@ function continueCharacterAdvance(){
 	});
 }
 
-/*function WebSocketTest()
+function WebSocketTest()
 {
 	$('fieldset').css('opacity',1);
    	if( socket == undefined ) {
@@ -848,7 +848,7 @@ function continueCharacterAdvance(){
 	   		}
 	   	})
 	}   	
-}*/
+}
 
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
