@@ -601,6 +601,7 @@ function startGame(){
 	lightSet( 0xffffaa, { 'x': 1.5, 'y': 1.4, 'z': 2.65 } );
 	lightSet( 0xffffaa, { 'x': -2.24, 'y': 2.1, 'z': -7.97 } );
 	WebSocketTest();
+	$(".mainClock").css("opacity", 1);
     fxSounds["wind"].play();
 
 	setTimeout(function(){
@@ -646,6 +647,7 @@ function succesGame(){
 	characterAdvance = false;
 	$(".coverAction").css("opacity", 0.8);
 	$('.ClockMensaje').html('Bravo!!, conseguiste salvarle!');
+	$(".mainClock").css("opacity", 0);
 	ambientLight.intensity = 1;
 	action.walk.stop();
 	action.convert.play();
@@ -666,6 +668,7 @@ function failureGame(){
 	characterAdvance = false;
 	$(".coverAction").css("opacity", 0.8);
 	$('.ClockMensaje').html('Oh no!!, Se ha liberado!');
+	$(".mainClock").css("opacity", 0);
 	action.walk.stop();
 	action.convert.play();
 	clearInterval(refreshIntervalId);

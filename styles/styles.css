@@ -124,7 +124,7 @@ fieldset {
   transition: opacity 0.3s ease-in-out;
 }
 .addingClock .inn {
-      background-color: #5ca557 !important;
+      background-color: #257920 !important;
 }
 .addingClock{
     position: absolute !important;
@@ -140,7 +140,7 @@ fieldset {
     transition: opacity 0.3s ease-in-out;
 }
 .ClockMensaje{
-    color: #5ca557;
+    color: #257920;
     font-size: 40px;
     width: 50%;
     height: 50%;
@@ -151,8 +151,8 @@ fieldset {
     top: 450px;
     margin: auto;
     text-align: center;
-    -webkit-text-stroke-width: 3px;
-    -webkit-text-stroke-color: #444944;
+    -webkit-text-stroke-width: 1px;
+    -webkit-text-stroke-color: #ffffff;
 }
 .coverAction{
   position: absolute;
