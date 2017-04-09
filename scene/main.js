@@ -801,7 +801,7 @@ function continueCharacterAdvance(){
 	});
 }
 
-function WebSocketTest()
+/*function WebSocketTest()
 {
 	$('fieldset').css('opacity',1);
    	if( socket == undefined ) {
@@ -848,7 +848,7 @@ function WebSocketTest()
 	   		}
 	   	})
 	}   	
-}
+}*/
 
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
