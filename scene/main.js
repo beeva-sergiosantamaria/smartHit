@@ -659,7 +659,7 @@ function succesGame(){
 	actionGate.close.play();
 	setTimeout(function(){
 		stopGame();
-	}, 3000);
+	}, 15000);
 }
 
 function failureGame(){
@@ -677,7 +677,7 @@ function failureGame(){
 	fxSounds["laugh"].play();
 	setTimeout(function(){
 		stopGame();
-	}, 3000);
+	}, 15000);
 }
 
 function eraseScena(){
