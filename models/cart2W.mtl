@@ -1,0 +1,24 @@
+# Blender MTL File: 'cart2W.blend'
+# Material Count: 2
+
+newmtl cart
+Ns 94.117647
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd http://localhost/smartHit/models/cart512.png
+
+newmtl cart.002
+Ns 94.117647
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd http://localhost/smartHit/models/cart512.png

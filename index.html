@@ -6,37 +6,42 @@
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link rel="stylesheet" type="text/css" href="styles/styles.css">
 		<link rel="stylesheet" type="text/css" href="styles/animate.css">
+		<link rel="stylesheet" type="text/css" href="styles/flipclock.css">
 		<!--<link rel="manifest" href="manifest.json">-->
 		<meta name="mobile-web-app-capable" content="yes">
 	</head>
 	<body class="darkBack">
-		<div id="container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 990"></div>
-		<canvas id="inputCanvas" width="320" height="240" style="position: absolute; top: 0; right: 0; display: none"></canvas>
+		<canvas id="inputCanvas" style="position: absolute; top: 0; right: 0; display: none"></canvas>
 		<video id="inputVideo" autoplay loop style="display: none"></video>
-		<fieldset>
-		  <input type="checkbox" id="stark">
-		  <label for="stark">Stark</label>
-		  <input type="checkbox" id="lannister">
-		  <label for="lannister">Lannister</label>
-		  <input type="checkbox" id="baratheon">
-		  <label for="baratheon">Baratheon</label>
-		</fieldset>
+		<video class="faceVideoStyle" autoplay loop controls="false" muted>
+		  	<source src="video/muda.mp4" type="video/mp4">
+		</video>
+		<video class="faceVideoStyleSpeak" autoplay loop controls="false" muted>
+		  	<source src="video/habla.mp4" type="video/mp4">
+		</video>
+		<!--<img id="cityImage" src="images/city.jpg" class="imagesCity"/>-->
+		<div id="container" class="webGlContainer opacityZero">
+			<div class="mainClock"></div>
+			<div class="coverAction"></div>
+			<div class="addingClock"></div>
+			<div class="ClockMensaje"></div>
+		</div>
 		<script type="text/javascript" src="scene/variables.js"></script>
 		<script type="text/javascript" src="libs/jquery-2.1.0.min.js"></script>
+		<script type="text/javascript" src="libs/headTrack.js"></script>
+		<!--<script type="text/javascript" src="libs/parallax.js"></script>-->
 		<script type="text/javascript" src="libs/socket.io.js"></script>
 		<!--<script src="http://www.nihilogic.dk/labs/canvas2image/canvas2image.js"></script>-->
 		<!--<script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.min.js"></script>-->
-		<script type="text/javascript" src="models/faceAnim.js"></script>
-		<script type="text/javascript" src="models/womanFaceAnim.js"></script>
-		<script type="text/javascript" src="scene/womanFaceAnimated.js"></script>
 		<script type="text/javascript" src="libs/three78.js"></script>
-		<!--<script type="text/javascript" src="libs/DDSLoader.js"></script>
+		<script type="text/javascript" src="libs/DDSLoader.js"></script>
 		<script type="text/javascript" src="libs/MTLLoader.js"></script>
-		<script type="text/javascript" src="libs/OBJLoader.js"></script>-->
+		<script type="text/javascript" src="libs/OBJLoader.js"></script>
+		<script type="text/javascript" src="scene/character.js"></script>
 		<script type="text/javascript" src="libs/tween.js"></script>
 		<script type="text/javascript" src="libs/OrbitControls.js"></script>
-		<script type="text/javascript" src="libs/headTrack.js"></script>
 		<script type="text/javascript" src="libs/SPE.js"></script>
+		<script type="text/javascript" src="libs/flipclock.js"></script>
 		<script type="text/javascript" src="scene/main.js"></script>
 	</body>
 </html>
