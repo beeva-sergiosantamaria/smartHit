@@ -1,7 +1,7 @@
 
 var camera, scene, renderer, JSONface, WomanJSONface, OBJface, mainClock,
 controls, mixer, mixerGate, clip, recognition, imageToSend, 
-newUserId, htracker, particleGroup, socket, faceDistance, audio, refreshIntervalId,
+newUserId, htracker, particleGroup, socket, faceDistance, audio, refreshIntervalId, hitLoop,
 	trackerActive = true,
 	width = window.innerWidth, 
 	height = window.innerHeight,
@@ -36,24 +36,31 @@ var protagonist = {
 var fxSounds = {};
     fxSounds["wind"] = new Audio("sounds/wind.mp3");
     fxSounds["wind"].loop = true;
-    fxSounds["wind"].volume = 0.5;
+    fxSounds["wind"].volume = 0.1;
+
+    fxSounds["mainMusic"] = new Audio("sounds/mainMusic.mp3");
+    fxSounds["mainMusic"].loop = true;
+    fxSounds["mainMusic"].volume = 0.5;
 
     fxSounds["spray"] = new Audio("sounds/aura.mp3");
     fxSounds["spray"].loop = true;
     fxSounds["spray"].volume = 0.5;
 
-    fxSounds["monster"] = new Audio("sounds/sonidoInquietanteCadenas.mp3");
+    fxSounds["monster"] = new Audio("sounds/foot.mp3");
     fxSounds["monster"].loop = true;
-    fxSounds["monster"].volume = 0.1;
+    fxSounds["monster"].volume = 1;
 
-    fxSounds["monstAcierto"] = new Audio("sounds/sonidoInquietante.mp3");
-    fxSounds["monstAcierto"].loop = true;
-    fxSounds["monstAcierto"].volume = 0.4;
+    fxSounds["monsterRunning"] = new Audio("sounds/footRunning.mp3");
+    fxSounds["monsterRunning"].loop = true;
+    fxSounds["monsterRunning"].volume = 1;
 
     fxSounds["explosion"] = new Audio("sounds/explosion.mp3");
     fxSounds["explosion"].volume = 1;
 
-    fxSounds["laugh"] = new Audio("sounds/laught.mp3");
+    fxSounds["woodCrash"] = new Audio("sounds/woodCrash3.mp3");
+    fxSounds["woodCrash"].volume = 1;
+
+    fxSounds["laugh"] = new Audio("sounds/laughtCreepy.mp3");
     fxSounds["laugh"].volume = 1;
 
 var videoInput = document.getElementById('inputVideo');
@@ -63,7 +70,7 @@ var canvasInput = document.getElementById('inputCanvas');
 
 var faceDetectOn = true;
 var voiceRecognitionIsNeeded = false;
-var functionality = 'welcome'; //'welcome', 'weather', 'game'
+var functionality = 'game'; //'welcome', 'weather', 'game'
 
 //-----------------------------	
 
@@ -89,7 +96,9 @@ else if( moment >= 14 && moment < 20 ) var momentSpeech = 'buenas tardes';
 else var momentSpeech = 'buenas noches';
 
 $( document ).ready(function() {
-	getUserFaces();
+	//getUserFaces();
+			initRender();
+			animate();
 });
 
 function getUserFaces(){
@@ -159,8 +168,10 @@ function initRender() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	initTracker();
-	speechRecognitionOn();
+	//initTracker();
+	//speechRecognitionOn();
+
+	startGame();
 }
 
 function initTracker(){
@@ -603,11 +614,12 @@ function startGame(){
 	WebSocketTest();
 	$(".mainClock").css("opacity", 1);
     fxSounds["wind"].play();
+    fxSounds["monster"].play();
 
 	setTimeout(function(){
 		$("#container").addClass('opacityOn');
 		characterAdvance = true;
-    	fxSounds["monster"].play();
+    	fxSounds["mainMusic"].play();
     	addingMainClock();
 	}, 3000);
 
@@ -623,6 +635,7 @@ function stopGame() {
   	setTimeout(function(){
   		$(".coverAction").css("opacity", 0);
   		fxSounds["wind"].pause();
+  		fxSounds["mainMusic"].pause();
 	  	scene.remove(scene.getObjectByName('scenario'));
 	  	scene.remove(scene.getObjectByName('character'));
 	  	scene.remove(scene.getObjectByName('scenarioLights'));
@@ -660,8 +673,11 @@ function succesGame(){
 	actionGate.open.stop();
 	actionGate.close.play();
 	setTimeout(function(){
-		stopGame();
-	}, 15000);
+		stopGame();	
+		functionality = 'welcome';
+	  	//$(".faceVideoStyle").addClass('faceVideoStyleAppear');
+	  	//if( audio == undefined ) speackFace('Conchita', '¿deseas algo mas ' + protagonist.name + '?.' );
+	},15000);
 }
 
 function failureGame(){
@@ -679,8 +695,11 @@ function failureGame(){
 	});
 	fxSounds["laugh"].play();
 	setTimeout(function(){
-		stopGame();
-	}, 15000);
+		stopGame();	
+		functionality = 'welcome';
+	  	//$(".faceVideoStyle").addClass('faceVideoStyleAppear');
+	  	//if( audio == undefined ) speackFace('Conchita', '¿deseas algo mas ' + protagonist.name + '?.' );
+	},15000);
 }
 
 function eraseScena(){
@@ -816,17 +835,18 @@ function WebSocketTest()
 				setTimeout(function(){ $('.ClockMensaje').html('');}, data.weaponValue * 1000 );
 		   		}
 		   	else if( data.color == 'car1' || data.color == 'car2' ){
-		   		console.log('carro lanzado: ', data.color, data.weaponValue );
 		   		action.hit.play();
 		   		action.walk.stop();
 				addCart( data.color );
 		   		characterAdvance = false;
+		   		fxSounds["monster"].pause();
 		   		$('.ClockMensaje').html('Has colocado un carro en su camino!');
 		   		addingClock( data.weaponValue );
 		   		setTimeout(function(){ 
 		   			$('.ClockMensaje').html('');
-		   			console.log(scene.getObjectByName( "car" ));
 		   			character.remove( scene.getObjectByName( "car" ) );
+		   			character.remove( scene.getObjectByName( "bang" ) );
+		   			fxSounds["monster"].play();
 			   		action.hit.stop();
 			   		action.walk.play();
 		   			characterAdvance = true;
@@ -836,9 +856,13 @@ function WebSocketTest()
 		   		$('.ClockMensaje').css('color', 'red');
 		   		$('.ClockMensaje').html('oh no!, la pocima correcta era la '+ currentColor);
 		   		fxSounds["laugh"].play();
+		   		fxSounds["monster"].pause();
+		   		fxSounds["monsterRunning"].play();
 		   		characterSpeedWalk = 8;
 		   		characterLightsRotateSpeed = 0.5;
 		   		setTimeout(function(){
+			   		fxSounds["monster"].play();
+			   		fxSounds["monsterRunning"].pause();
 		   			$('.ClockMensaje').css('color', '');
 		   			$('.ClockMensaje').html('');
 		   			characterSpeedWalk = 1;
@@ -859,6 +883,14 @@ function onWindowResize() {
 function animate() {
 	setTimeout( function() {
         requestAnimationFrame( animate );
+
+		if( action.hit != undefined ) { 
+			if( action.hit.time > 1.05 ){
+				if( scene.getObjectByName( "bang" ).scale.x == 0 ) movement( { 'x': 3.5, 'y': 3, 'z': 1 }, scene.getObjectByName( "bang" ).scale, 0, 399, TWEEN.Easing.Back.Out );
+				setTimeout(function(){ scene.getObjectByName( "bang" ).scale.set(0,0,1);}, 700 );
+				setTimeout(function(){ fxSounds["woodCrash"].play();}, 50 );	
+			}
+		}
 
 		if( character.position.z < 46.5 && characterAdvance == true ) {
 			character.position.z += ( 0.005 * characterSpeedWalk);

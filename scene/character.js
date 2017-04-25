@@ -28,6 +28,13 @@ function buildModel(){
 function addCart( name ){
 	if ( name == 'car1' ) var objectToBuild = 'cart2W';
 	else var objectToBuild = 'cart4W';
+	
+	var textureGlass = new THREE.TextureLoader().load( "images/bang.png" );
+	var spriteMaterialGlass = new THREE.SpriteMaterial({ map: textureGlass, color: 0xffffff, transparent : true, opacity: 0.8 } );
+	var spriteGlass = new THREE.Sprite( spriteMaterialGlass );
+	    spriteGlass.scale.set(0,0,1);
+	    spriteGlass.position.set( 0, 17, -35);
+	    spriteGlass.name = "bang";
 
 	var onProgress = function ( xhr ) {
 		if ( xhr.lengthComputable ) {
@@ -50,8 +57,10 @@ function addCart( name ){
 			object.receiveShadow = true;
 			object.castShadow = true;
 			object.name = 'car';
+			character.add( spriteGlass );
 			character.add( object );
 		   	movement( { 'x': 0, 'y': 2, 'z': -36.6 }, object.position, 0, 2000, TWEEN.Easing.Bounce.Out );
+		   	movement( { 'x': 0, 'y': 3, 'z': -35 }, spriteGlass.position, 0, 2000, TWEEN.Easing.Bounce.Out );
 		}, onProgress, onError );
 	});
 }
@@ -74,6 +83,8 @@ function buildCharacter(){
 	    action.hit = mixer.clipAction(geometry.animations[ 2 ]);
 	    action.stand = mixer.clipAction(geometry.animations[ 3 ]);
 	    action.walk = mixer.clipAction(geometry.animations[ 4 ]);
+
+	    action.hit.timeScale = 1;
 
 	    action.convert.setEffectiveWeight(1);
 	    action.convertInit.setEffectiveWeight(1);
