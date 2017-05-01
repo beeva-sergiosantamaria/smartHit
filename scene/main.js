@@ -1,12 +1,16 @@
 
-var camera, scene, renderer, JSONface, WomanJSONface, OBJface, mainClock,
+var camera, scene, renderer, mainClock, socket,
 controls, mixer, mixerGate, clip, recognition, imageToSend, 
-newUserId, htracker, particleGroup, socket, faceDistance, audio, refreshIntervalId, hitLoop,
+newUserId, htracker, particleGroup, faceDistance, audio, refreshIntervalId, hitLoop,
 	trackerActive = true,
 	width = window.innerWidth, 
 	height = window.innerHeight,
 	characterLightsRotateSpeed = 0.06,
 	characterSpeedWalk = 1;
+
+var playAudioControl = true;
+var wayMiddleDistance = true;
+var wayEndDistance = true;
 
 var animation;
 var action = {};
@@ -47,7 +51,7 @@ var fxSounds = {};
     fxSounds["spray"].volume = 0.5;
 
     fxSounds["monster"] = new Audio("sounds/foot.mp3");
-    fxSounds["monster"].loop = true;
+    //fxSounds["monster"].loop = true;
     fxSounds["monster"].volume = 1;
 
     fxSounds["monsterRunning"] = new Audio("sounds/footRunning.mp3");
@@ -55,13 +59,16 @@ var fxSounds = {};
     fxSounds["monsterRunning"].volume = 1;
 
     fxSounds["explosion"] = new Audio("sounds/explosion.mp3");
-    fxSounds["explosion"].volume = 1;
+    fxSounds["explosion"].volume = 0.2;
 
     fxSounds["woodCrash"] = new Audio("sounds/woodCrash3.mp3");
-    fxSounds["woodCrash"].volume = 1;
+    fxSounds["woodCrash"].volume = 0.2;
 
     fxSounds["laugh"] = new Audio("sounds/laughtCreepy.mp3");
     fxSounds["laugh"].volume = 1;
+
+    fxSounds["scape"] = new Audio("sounds/swish.mp3");
+    fxSounds["scape"].volume = 1;
 
 var videoInput = document.getElementById('inputVideo');
 var canvasInput = document.getElementById('inputCanvas');
@@ -70,7 +77,7 @@ var canvasInput = document.getElementById('inputCanvas');
 
 var faceDetectOn = true;
 var voiceRecognitionIsNeeded = false;
-var functionality = 'game'; //'welcome', 'weather', 'game'
+var functionality = 'welcome'; //'welcome', 'weather', 'game'
 
 //-----------------------------	
 
@@ -89,16 +96,14 @@ var randomColors = [
 					{ 'colour': 'amarillo','valueRGB': {'r': 255,'g': 255,'b': 0},	'valueHEX': 0xffff00 },
 					{ 'colour': 'naranja','valueRGB': {'r': 255,'g': 140,'b': 0},	'valueHEX': 0xff8c00 }];
 
-var currentColor = 'white';					
+var currentColor = 'blanca';					
 
 if( moment >= 7 && moment < 14 ) var momentSpeech = 'buenos dias';
 else if( moment >= 14 && moment < 20 ) var momentSpeech = 'buenas tardes';
 else var momentSpeech = 'buenas noches';
 
 $( document ).ready(function() {
-	//getUserFaces();
-			initRender();
-			animate();
+	getUserFaces();
 });
 
 function getUserFaces(){
@@ -168,22 +173,22 @@ function initRender() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	//initTracker();
-	//speechRecognitionOn();
-
-	startGame();
+	initTracker();
+	speechRecognitionOn();
 }
 
 function initTracker(){
 	console.log('inicia init tracker');
 	htracker = new headtrackr.Tracker({
 		ui: false,
+		//debug: canvasInput
 		debug: false
 	});
 	htracker.init(videoInput, canvasInput);
 	htracker.start();
 
 	window.addEventListener( 'headtrackingEvent', function (event) {
+		//console.log(event.z);
 	  	if( event.z < 90) {
 	  		if( functionality == 'welcome' && trackerActive == true) {
 	  			faceFounded();
@@ -424,7 +429,7 @@ function gameResponse(intent, valuie){
 	    	setTimeout(function(){	
 			  	$(".faceVideoStyle").addClass('faceVideoStyleAppear');
 			  	if( audio == undefined ) speackFace('Conchita', '¿deseas algo mas ' + protagonist.name + '?.' );
-	    	},5000);
+	    	},7000);
 	        break;
 	}
 };
@@ -601,21 +606,20 @@ function meteoGen(value, intensity) {
     });
     particleGroup.addEmitter( emitter );
    	particleGroup.mesh.name = 'meteo';
-   	//particleGroup.mesh.renderOrder = 0;
    	scene.add( particleGroup.mesh );
 }
+
 function startGame(){
 	buildModel();
 	buildCharacter();
 	addGate();
-	//meteoGen('lluvia', 10);
 	lightSet( 0xffffaa, { 'x': 1.5, 'y': 1.4, 'z': 2.65 } );
-	lightSet( 0xffffaa, { 'x': -2.24, 'y': 2.1, 'z': -7.97 } );
+	//lightSet( 0xffffaa, { 'x': -2.24, 'y': 2.1, 'z': -7.97 } );
 	WebSocketTest();
+	wayMiddleDistance = true;
+	wayEndDistance = true;
 	$(".mainClock").css("opacity", 1);
     fxSounds["wind"].play();
-    fxSounds["monster"].play();
-
 	setTimeout(function(){
 		$("#container").addClass('opacityOn');
 		characterAdvance = true;
@@ -632,6 +636,7 @@ function stopGame() {
   	$("#container").removeClass('opacityOn');
   	fxSounds["monster"].pause();
 	mainClock.timer._destroyTimer();
+	clearInterval(refreshIntervalId);
   	setTimeout(function(){
   		$(".coverAction").css("opacity", 0);
   		fxSounds["wind"].pause();
@@ -640,6 +645,8 @@ function stopGame() {
 	  	scene.remove(scene.getObjectByName('character'));
 	  	scene.remove(scene.getObjectByName('scenarioLights'));
 	  	scene.remove(scene.getObjectByName('gate'));
+	  	action = {};
+		actionGate = {};
 		scenario = new THREE.Object3D();
 		scenario.name = 'scenario';
 		scenarioLights = new THREE.Object3D();
@@ -658,8 +665,6 @@ function stopGame() {
 
 function succesGame(){
 	characterAdvance = false;
-	$(".coverAction").css("opacity", 0.8);
-	$('.ClockMensaje').html('Bravo!!, conseguiste salvarle!');
 	$(".mainClock").css("opacity", 0);
 	ambientLight.intensity = 1;
 	action.walk.stop();
@@ -673,20 +678,28 @@ function succesGame(){
 	actionGate.open.stop();
 	actionGate.close.play();
 	setTimeout(function(){
+		$(".coverAction").css("opacity", 0.8);
+		$('.ClockMensaje').html('Bravo!!, conseguiste retenerle!');
+	},4000);
+	setTimeout(function(){
 		stopGame();	
 		functionality = 'welcome';
-	  	//$(".faceVideoStyle").addClass('faceVideoStyleAppear');
-	  	//if( audio == undefined ) speackFace('Conchita', '¿deseas algo mas ' + protagonist.name + '?.' );
+	  	$(".faceVideoStyle").addClass('faceVideoStyleAppear');
+	  	if( audio == undefined ) speackFace('Conchita', '¿deseas algo mas ' + protagonist.name + '?.' );
 	},15000);
 }
 
 function failureGame(){
 	characterAdvance = false;
-	$(".coverAction").css("opacity", 0.8);
 	$('.ClockMensaje').html('Oh no!!, Se ha liberado!');
 	$(".mainClock").css("opacity", 0);
 	action.walk.stop();
-	action.convert.play();
+	fxSounds["laugh"].play();
+	setTimeout(function(){ 
+		fxSounds["scape"].play();
+		$(".coverAction").css("opacity", 0.8); 
+	},1000);
+	action.scape.play();
 	clearInterval(refreshIntervalId);
 	var lightChararterChildrens = scene.getObjectByName( "scenarioLights" ).children;
 	$.each(lightChararterChildrens, function( index, value ) {
@@ -696,10 +709,12 @@ function failureGame(){
 	fxSounds["laugh"].play();
 	setTimeout(function(){
 		stopGame();	
+	},10000);
+	setTimeout(function(){
 		functionality = 'welcome';
-	  	//$(".faceVideoStyle").addClass('faceVideoStyleAppear');
-	  	//if( audio == undefined ) speackFace('Conchita', '¿deseas algo mas ' + protagonist.name + '?.' );
-	},15000);
+	  	$(".faceVideoStyle").addClass('faceVideoStyleAppear');
+	  	if( audio == undefined ) speackFace('Conchita', '¿deseas algo mas ' + protagonist.name + '?.' );
+	},18000);
 }
 
 function eraseScena(){
@@ -750,7 +765,21 @@ function addingMainClock(){
 		callbacks: {
 	    	interval: function() {
 	    		var time = this.factory.getTime().time;
+	    		if(time == 600){
+	    			var datosTimeOut = { 'tiempo': 10 };
+					socket.emit('timeOut', datosTimeOut);
+	    		}
+	    		if(time == 300){
+	    			var datosTimeOut = { 'tiempo': 5 };
+					socket.emit('timeOut', datosTimeOut);
+	    		}
+	    		if(time == 60){
+	    			var datosTimeOut = { 'tiempo': 1 };
+					socket.emit('timeOut', datosTimeOut);
+	    		}
 	    		if(time == 0) { 
+	    			var datosTimeOut = { 'tiempo': 0 };
+					socket.emit('timeOut', datosTimeOut);
 	    			this._destroyTimer();
 	    			if( functionality == 'game' ) { 
 	    				succesGame();
@@ -784,7 +813,6 @@ function stopAdvance(timeout){
 	characterAdvance = false;
 	action.walk.stop();
 	action.convert.play();
-	$(".coverAction").css("opacity", 0.3);
 	$(".mainClock").css("opacity", 0.3);
 	var objects = scene.getObjectByName( "scenarioLights" ).children;
 	var lightChararterChildrens = scene.getObjectByName( "characterLights" ).children;
@@ -824,9 +852,9 @@ function WebSocketTest()
 {
 	$('fieldset').css('opacity',1);
    	if( socket == undefined ) {
-   		socket = io.connect('http://ec2-52-31-73-229.eu-west-1.compute.amazonaws.com:3031/', { 'forceNew': true } );
+		socket = io.connect('http://ec2-52-31-73-229.eu-west-1.compute.amazonaws.com:3031/', { 'forceNew': true } );	
 	   	socket.on('toSmartMirror', function(data){
-	   		console.log("se ha conectado: ", data.color, data.weaponValue );
+	   	console.log("se ha conectado: ", data.color, data.weaponValue );
 	   	if( functionality == "game" && characterAdvance == true ) {	
 		   	if( data.color == currentColor ) {
 	    		$('.ClockMensaje').html('La pocima esta haciendo efecto!');
@@ -891,13 +919,34 @@ function animate() {
 				setTimeout(function(){ fxSounds["woodCrash"].play();}, 50 );	
 			}
 		}
-
-		if( character.position.z < 46.5 && characterAdvance == true ) {
+		if( action.walk != undefined ) { 
+			//console.log("walk timer: ", Math.floor(action.walk.time));
+			if( Math.floor(action.walk.time) == 1 || Math.floor(action.walk.time) == 3 ){
+				if( playAudioControl == true ) fxSounds["monster"].play();
+        		playAudioControl = false;
+			}
+			else {
+				playAudioControl = true;
+			}
+		}
+		if( Math.floor(character.position.z) == 21 && wayMiddleDistance == true ){
+			var datosTimeOut = { 'potion': 99998 };
+			wayMiddleDistance = false;
+			socket.emit('requestWeapons', datosTimeOut);
+		}
+		if( Math.floor(character.position.z) == 34  && wayEndDistance == true ){
+			var datosTimeOut = { 'potion': 99997 };
+			wayEndDistance = false;
+			socket.emit('requestWeapons', datosTimeOut);
+		}
+		if( Math.floor(character.position.z) < 46 && characterAdvance == true ) {
 			character.position.z += ( 0.005 * characterSpeedWalk);
 			character.position.y -= ( 0.00035 * characterSpeedWalk);
 		}
 
-		if( character.position.z > 46 && characterAdvance == true ){
+		if( Math.floor(character.position.z) == 46 && characterAdvance == true ){
+			var datosTimeOut = { 'tiempo': 99999 };
+			socket.emit('timeOut', datosTimeOut);
 			failureGame();
 		}
     }, 1000 / 30 );
@@ -925,8 +974,6 @@ function render(){
 
 	if( characterLights.rotation ) characterLights.rotation.y += characterLightsRotateSpeed;
 
-	if( WomanJSONface != undefined ) {
-	} 
 	if( particleGroup!=undefined ) { particleGroup.tick( delta/gravityForce ); }
 
     if( mixer != undefined ) {  mixer.update((delta/2) * characterSpeedWalk ); }

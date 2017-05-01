@@ -81,23 +81,32 @@ function buildCharacter(){
 	    action.convert = mixer.clipAction(geometry.animations[ 0 ]);
 	    action.convertInit = mixer.clipAction(geometry.animations[ 1 ]);
 	    action.hit = mixer.clipAction(geometry.animations[ 2 ]);
-	    action.stand = mixer.clipAction(geometry.animations[ 3 ]);
-	    action.walk = mixer.clipAction(geometry.animations[ 4 ]);
+	    action.scape = mixer.clipAction(geometry.animations[ 3 ]);
+	    action.stand = mixer.clipAction(geometry.animations[ 4 ]);
+	    action.walk = mixer.clipAction(geometry.animations[ 5 ]);
 
 	    action.hit.timeScale = 1;
+	    action.walk.timeScale = 0.6;
+	    action.scape.timeScale = 3.5;
+	    action.convert.timeScale = 1,5;
 
 	    action.convert.setEffectiveWeight(1);
 	    action.convertInit.setEffectiveWeight(1);
 	    action.stand.setEffectiveWeight(1);
 	    action.hit.setEffectiveWeight(1);
+	    action.scape.setEffectiveWeight(1);
 	    action.walk.setEffectiveWeight(1);
 
 	    action.stand.setLoop(THREE.LoopOnce, 0);
 	    action.stand.clampWhenFinished = true;
 
+	    action.scape.setLoop(THREE.LoopOnce, 0);
+	    action.scape.clampWhenFinished = true;
+
 	    action.convert.enabled = true;
 	    action.convertInit.enabled = true;
 	    action.hit.enabled = true;
+	    action.scape.enabled = true;
 	    action.stand.enabled = true;
 	    action.walk.enabled = true;
 
@@ -118,9 +127,9 @@ function buildCharacter(){
 
 function addCharacterLights(colour, positioned){
 
-	var light = new THREE.PointLight( colour, 1, 10, 2);
+	/*var light = new THREE.PointLight( colour, 1, 10, 2);
 	light.position.set( positioned.x, positioned.y, positioned.z );
-	characterLights.add( light );
+	characterLights.add( light );*/
 
 	var textureGlass = new THREE.TextureLoader().load( "images/particles/Static/Glows/Flare1.png" );
 	var spriteMaterialGlass = new THREE.SpriteMaterial({ map: textureGlass, color: colour, transparent : true, opacity: 0.5 } );
@@ -129,7 +138,7 @@ function addCharacterLights(colour, positioned){
 	    spriteGlass.position.set( positioned.x, positioned.y, positioned.z );
 	characterLights.add( spriteGlass );
 
-	var geometry = new THREE.SphereGeometry( 0.05, 16, 16 );
+	var geometry = new THREE.SphereGeometry( 0.05, 2, 2 );
 	var material = new THREE.MeshBasicMaterial( {
 		color: colour,
 		transparent: true,
@@ -147,7 +156,7 @@ function addCharacterLights(colour, positioned){
 
 function lightSet(colour, positioned){ 
 
-    var geometry = new THREE.SphereGeometry( 0.1, 16, 16 );
+    var geometry = new THREE.SphereGeometry( 0.1, 2, 2 );
 	var material = new THREE.MeshBasicMaterial( {
 		color: colour,
 		transparent: true,
@@ -207,6 +216,9 @@ function addGate(){
 	    actionGate.close = mixerGate.clipAction(geometry.animations[ 0 ]);
 	    actionGate.init = mixerGate.clipAction(geometry.animations[ 1 ]);
 	    actionGate.open = mixerGate.clipAction(geometry.animations[ 2 ]);
+
+	    actionGate.close.timeScale = 0.5;
+	    actionGate.open.timeScale = 0.5;
 
 	    actionGate.close.setEffectiveWeight(1);
 	    actionGate.init.setEffectiveWeight(1);
